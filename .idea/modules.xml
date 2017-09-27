@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/pokoban-agent.iml" filepath="$PROJECT_DIR$/.idea/pokoban-agent.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/pokoban-agent.iml" filepath="$PROJECT_DIR$/.idea/pokoban-agent.iml" />
     </modules>
   </component>
 </project>
