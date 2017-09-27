@@ -1,0 +1,1036 @@
+{
+  "initial": {
+    "boxes": [{
+      "col": 16,
+      "letter": "A",
+      "row": 1
+    }],
+    "walls": [
+      {
+        "col": 0,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 19,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 1,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 0,
+        "letter": "+",
+        "row": 1
+      },
+      {
+        "col": 2,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 0,
+        "letter": "+",
+        "row": 2
+      },
+      {
+        "col": 3,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 16,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 0,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 4,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 13,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 1,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 5,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 2,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 29,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 23,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 6,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 28,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 20,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 3,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 17,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 25,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 7,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 14,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 4,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 8,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 5,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 18,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 24,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 9,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 15,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 21,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 6,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 29,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 26,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 10,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 7,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 19,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 16,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 11,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 25,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 8,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 22,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 12,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 9,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 20,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 29,
+        "letter": "+",
+        "row": 1
+      },
+      {
+        "col": 27,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 17,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 13,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 10,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 26,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 23,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 21,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 14,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 18,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 11,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 29,
+        "letter": "+",
+        "row": 2
+      },
+      {
+        "col": 28,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 15,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 27,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 12,
+        "letter": "+",
+        "row": 3
+      },
+      {
+        "col": 22,
+        "letter": "+",
+        "row": 0
+      },
+      {
+        "col": 24,
+        "letter": "+",
+        "row": 3
+      }
+    ],
+    "agents": [{
+      "col": 14,
+      "letter": "0",
+      "row": 1
+    }],
+    "goals": [{
+      "col": 15,
+      "letter": "a",
+      "row": 1
+    }],
+    "dimensions": 30
+  },
+  "transitions": [
+    {
+      "reward": -1,
+      "success": true,
+      "action": "MOVE_EAST",
+      "state": {
+        "boxes": [{
+          "col": 16,
+          "letter": "A",
+          "row": 1
+        }],
+        "walls": [
+          {
+            "col": 0,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 19,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 1,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 0,
+            "letter": "+",
+            "row": 1
+          },
+          {
+            "col": 2,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 0,
+            "letter": "+",
+            "row": 2
+          },
+          {
+            "col": 3,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 16,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 0,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 4,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 13,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 1,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 5,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 2,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 29,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 23,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 6,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 28,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 20,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 3,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 17,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 25,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 7,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 14,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 4,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 8,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 5,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 18,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 24,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 9,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 15,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 21,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 6,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 29,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 26,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 10,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 7,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 19,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 16,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 11,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 25,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 8,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 22,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 12,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 9,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 20,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 29,
+            "letter": "+",
+            "row": 1
+          },
+          {
+            "col": 27,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 17,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 13,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 10,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 26,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 23,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 21,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 14,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 18,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 11,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 29,
+            "letter": "+",
+            "row": 2
+          },
+          {
+            "col": 28,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 15,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 27,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 12,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 22,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 24,
+            "letter": "+",
+            "row": 3
+          }
+        ],
+        "agents": [{
+          "col": 15,
+          "letter": "0",
+          "row": 1
+        }],
+        "goals": [{
+          "col": 15,
+          "letter": "a",
+          "row": 1
+        }],
+        "dimensions": 30
+      },
+      "done": false
+    },
+    {
+      "reward": 110,
+      "success": true,
+      "action": "PULL_WEST",
+      "state": {
+        "boxes": [{
+          "col": 15,
+          "letter": "A",
+          "row": 1
+        }],
+        "walls": [
+          {
+            "col": 0,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 19,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 1,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 0,
+            "letter": "+",
+            "row": 1
+          },
+          {
+            "col": 2,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 0,
+            "letter": "+",
+            "row": 2
+          },
+          {
+            "col": 3,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 16,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 0,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 4,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 13,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 1,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 5,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 2,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 29,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 23,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 6,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 28,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 20,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 3,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 17,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 25,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 7,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 14,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 4,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 8,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 5,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 18,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 24,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 9,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 15,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 21,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 6,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 29,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 26,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 10,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 7,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 19,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 16,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 11,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 25,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 8,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 22,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 12,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 9,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 20,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 29,
+            "letter": "+",
+            "row": 1
+          },
+          {
+            "col": 27,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 17,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 13,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 10,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 26,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 23,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 21,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 14,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 18,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 11,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 29,
+            "letter": "+",
+            "row": 2
+          },
+          {
+            "col": 28,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 15,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 27,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 12,
+            "letter": "+",
+            "row": 3
+          },
+          {
+            "col": 22,
+            "letter": "+",
+            "row": 0
+          },
+          {
+            "col": 24,
+            "letter": "+",
+            "row": 3
+          }
+        ],
+        "agents": [{
+          "col": 14,
+          "letter": "0",
+          "row": 1
+        }],
+        "goals": [{
+          "col": 15,
+          "letter": "a",
+          "row": 1
+        }],
+        "dimensions": 30
+      },
+      "done": true
+    }
+  ]
+}
