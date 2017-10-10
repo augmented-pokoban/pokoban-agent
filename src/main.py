@@ -1,11 +1,11 @@
-from src.Data import Data
-from src.mapper import *
 from pprint import pprint
 
-test = Data()
+import env.Data
+from env.mapper import *
+
+test = env.Data.Data()
 
 trajectory = test.load_random()
-
 
 matrix = expert_to_matrix(trajectory['initial'])
 remapped = matrix_to_expert(matrix)
