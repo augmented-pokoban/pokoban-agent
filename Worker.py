@@ -111,7 +111,7 @@ class Worker:
                         s1, r, done = self.env.step(a)
                     except Exception as e:
                         self.env._store = True
-                        self.env.terminate()
+                        self.env.terminate('episode count: ' + str(episode_count))
                         print(e)
                         sys.exit()
 
@@ -152,7 +152,7 @@ class Worker:
                     if episode_count % 250 == 0 and self.name == 'worker_0':
                         print('Episode:', episode_count, 'steps: ', episode_step_count, ': Saved model')
                         saver.save(sess, self.model_path + '/model-' + str(episode_count) + '.cptk')
-                        self.play(sess)
+                        self.play(sess, episode_count)
 
                     mean_reward = np.mean(self.episode_rewards[-5:])
                     mean_length = np.mean(self.episode_lengths[-5:])
@@ -174,7 +174,7 @@ class Worker:
 
                 episode_count += 1
 
-    def play(self, sess):
+    def play(self, sess, episode_count):
 
         if not self.explore_self:
             print('Play must be done using a explore_self environment')
@@ -202,5 +202,5 @@ class Worker:
             s = process_frame(s, self.s_size)
             t += 1
 
-        self.env.terminate()
+        self.env.terminate('episode count: ' + str(episode_count))
         print('Test trial terminated')

@@ -22,5 +22,5 @@ def step(game_id, action):
     return Transition(result)
 
 
-def terminate(game_id, store=False):
-    requests.delete(base_url + game_id, params={'store': store})
+def terminate(game_id, store=False, description='', is_planner=False):
+    requests.delete(base_url + game_id, params={'store': store, 'description': description, 'is_planner': is_planner})
