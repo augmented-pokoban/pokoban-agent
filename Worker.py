@@ -4,6 +4,7 @@ from Network import *
 from helper import update_target_graph, discount, process_frame
 import numpy as np
 from env.Env import Env
+from random import choice
 
 
 # noinspection PyAttributeOutsideInit
@@ -108,7 +109,7 @@ class Worker:
                     # Create step
 
                     try:
-                        s1, r, done = self.env.step(a)
+                        s1, r, done, _ = self.env.step(a)
                     except Exception as e:
                         self.env._store = True
                         self.env.terminate('episode count: ' + str(episode_count))
@@ -188,17 +189,20 @@ class Worker:
         self.batch_rnn_state = rnn_state
 
         t = 0
+        success = True
 
         while not done and t < 300:
-            a_dist, v, rnn_state = sess.run(
-                [self.local_AC.policy, self.local_AC.value, self.local_AC.state_out],
-                feed_dict={self.local_AC.inputs: [s],
-                           self.local_AC.state_in[0]: rnn_state[0],
-                           self.local_AC.state_in[1]: rnn_state[1]})
+            if not success:
+                a = choice(self.actions)
+            else:
+                a_dist, v, rnn_state = sess.run(
+                    [self.local_AC.policy, self.local_AC.value, self.local_AC.state_out],
+                    feed_dict={self.local_AC.inputs: [s],
+                               self.local_AC.state_in[0]: rnn_state[0],
+                               self.local_AC.state_in[1]: rnn_state[1]})
+                a = np.argmax(a_dist)
 
-            a = np.argmax(a_dist)
-
-            s, r, done = self.env.step(a)
+            s, r, done, success = self.env.step(a)
             s = process_frame(s, self.s_size)
             t += 1
 

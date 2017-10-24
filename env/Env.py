@@ -72,7 +72,7 @@ class Env:
             # important to increment AFTER transtition is extracted
             self._cur_action += 1
 
-        return state_to_matrix(transition.state, transition.state.dims), transition.reward, transition.done
+        return state_to_matrix(transition.state, transition.state.dims), transition.reward, transition.done, transition.success
 
     def terminate(self, description=''):
         # if store is false, there is no active game on the server
