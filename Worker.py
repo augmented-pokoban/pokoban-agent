@@ -163,6 +163,11 @@ class Worker:
                 episode_count += 1
 
     def play(self, sess):
+
+        if not self.explore_self:
+            print('Play must be done using a explore_self environment')
+            return
+
         done = False
         s = self.env.reset(store=True)
 
@@ -173,21 +178,17 @@ class Worker:
 
         while not done and t < 300:
 
-            if self.explore_self:
-                a_dist, v, rnn_state = sess.run(
-                    [self.local_AC.policy, self.local_AC.value, self.local_AC.state_out],
-                    feed_dict={self.local_AC.inputs: [s],
-                               self.local_AC.state_in[0]: rnn_state[0],
-                               self.local_AC.state_in[1]: rnn_state[1]})
+            a_dist, v, rnn_state = sess.run(
+                [self.local_AC.policy, self.local_AC.value, self.local_AC.state_out],
+                feed_dict={self.local_AC.inputs: [s],
+                           self.local_AC.state_in[0]: rnn_state[0],
+                           self.local_AC.state_in[1]: rnn_state[1]})
 
-                a = np.argmax(a_dist)
-            else:
-                a, v = self.env.get_expert_action_value()
+            a = np.argmax(a_dist)
 
             s, r, done = self.env.step(a)
             s = process_frame(s, self.s_size)
             t += 1
-            if done:
-                self.env.terminate(store=True)
 
+        self.env.terminate()
         print('Test trial terminated')
