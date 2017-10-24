@@ -22,16 +22,16 @@ def state_to_matrix(state, dimensions):
     matrix = np.zeros((dimensions, dimensions, 8))
 
     for agent in state.agents:
-        matrix[agent.row, agent.row, INDEX.Agent] = 1
+        matrix[agent.row, agent.col, INDEX.Agent] = 1
 
     for box in state.boxes:
-        matrix[box.row, box.row, map_box(box.letter)] = 1
+        matrix[box.row, box.col, map_box(box.letter)] = 1
 
     for goal in state.goals:
-        matrix[goal.row, goal.row, map_goal(goal.letter)] = 1
+        matrix[goal.row, goal.col, map_goal(goal.letter)] = 1
 
     for wall in state.walls:
-        matrix[wall.row, wall.row, INDEX.Wall] = 1
+        matrix[wall.row, wall.col, INDEX.Wall] = 1
 
     return matrix
 

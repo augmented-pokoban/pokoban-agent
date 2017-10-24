@@ -1,3 +1,5 @@
+import sys
+
 from Network import *
 from helper import update_target_graph, discount, process_frame
 import numpy as np
@@ -95,13 +97,23 @@ class Worker:
                                        self.local_AC.state_in[1]: rnn_state[1]})
 
                         # Select the action using the prop distribution given in a_dist from previously
+                        if np.isnan(a_dist[0]).any():
+                            print(a_dist[0])
+
                         a = np.random.choice(self.actions, p=a_dist[0])
                         v = v[0, 0]
                     else:
                         a, v = self.env.get_expert_action_value()
 
                     # Create step
-                    s1, r, done = self.env.step(a)
+
+                    try:
+                        s1, r, done = self.env.step(a)
+                    except Exception as e:
+                        self.env._store = True
+                        self.env.terminate()
+                        print(e)
+                        sys.exit()
 
                     # Update values, states, total amount of steps, etc
                     episode_buffer.append([s, a, r, s1, done, v])
@@ -177,7 +189,6 @@ class Worker:
         t = 0
 
         while not done and t < 300:
-
             a_dist, v, rnn_state = sess.run(
                 [self.local_AC.policy, self.local_AC.value, self.local_AC.state_out],
                 feed_dict={self.local_AC.inputs: [s],
