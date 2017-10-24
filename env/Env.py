@@ -37,11 +37,13 @@ class Env:
         self.terminate()
 
         if self._use_server:
-            self._game_id, initial = api.init(choice(self._maps))
+            map_choice = choice(self._maps)
+            self._game_id, initial = api.init(map_choice)
+            # print("Playing game: ", map_choice)
 
         else:
             self._map = choice(self._maps)
-            print('Loading map (from expert):', self._map.level)
+            # print('Loading map (from expert):', self._map.level)
             self._cur_action = 0
             initial = self._map.initial
 
