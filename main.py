@@ -16,7 +16,7 @@ width = 20
 depth = 8
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env(use_server=False).get_action_meanings())  # Agent can move in many directions
-load_model = False
+load_model = True
 model_path = './model'
 
 tf.reset_default_graph()

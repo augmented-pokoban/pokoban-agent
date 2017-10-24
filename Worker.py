@@ -136,7 +136,7 @@ class Worker:
                     v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
 
                 # Periodically save gifs of episodes, model parameters, and summary statistics.
-                if episode_count % 5 == 0 and episode_count != 0:
+                if episode_count % 5 == 0:
                     if episode_count % 250 == 0 and self.name == 'worker_0':
                         print('Episode:', episode_count, 'steps: ', episode_step_count, ': Saved model')
                         saver.save(sess, self.model_path + '/model-' + str(episode_count) + '.cptk')
@@ -170,6 +170,7 @@ class Worker:
 
         done = False
         s = self.env.reset(store=True)
+        s = process_frame(s, self.s_size)
 
         rnn_state = self.local_AC.state_init
         self.batch_rnn_state = rnn_state
