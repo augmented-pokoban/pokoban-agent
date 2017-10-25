@@ -11,11 +11,11 @@ width = 20
 depth = 8
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env(use_server=False).get_action_meanings())  # Agent can move Left, Right, or Fire
-load_model = False
+load_model = True
+level = 'medium_1_box_1' # Or else set it to None
 model_path = './model'
 
 tf.reset_default_graph()
-
 
 with tf.device("/cpu:0"):
     global_episodes = tf.Variable(0, dtype=tf.int32, name='global_episodes', trainable=False)
@@ -28,7 +28,7 @@ with tf.device("/cpu:0"):
     # Create worker classes
     for i in range(num_workers):
         workers.append(
-            Worker(i, (height, width, depth, s_size), a_size, trainer, model_path, global_episodes, explore_self=False))
+            Worker(i, (height, width, depth, s_size), a_size, trainer, model_path, global_episodes, explore_self=True))
     saver = tf.train.Saver(max_to_keep=5)
 
 with tf.Session() as sess:
@@ -39,4 +39,4 @@ with tf.Session() as sess:
     # saver.restore(sess, ckpt.model_checkpoint_path)
 
     for i in range(1):
-        workers[0].play(sess)
+        workers[0].play(sess, 0, level=level)

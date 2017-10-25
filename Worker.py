@@ -174,14 +174,14 @@ class Worker:
 
                 episode_count += 1
 
-    def play(self, sess, episode_count):
+    def play(self, sess, episode_count, level=None):
 
         if not self.explore_self:
             print('Play must be done using a explore_self environment')
             return
 
         done = False
-        s = self.env.reset(store=True)
+        s = self.env.reset(store=True, level=level)
         s = process_frame(s, self.s_size)
 
         rnn_state = self.local_AC.state_init

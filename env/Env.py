@@ -32,12 +32,12 @@ class Env:
             self._maps = list(map(lambda expert_moves: ExpertMoves(expert_moves), api.get_expert_list()))
             # self._expert = Data()
 
-    def reset(self, store=False):
+    def reset(self, store=False, level=None):
 
         self.terminate()
 
         if self._use_server:
-            map_choice = choice(self._maps)
+            map_choice = choice(self._maps) if level is None else level
             self._game_id, initial = api.init(map_choice)
             # print("Playing game: ", map_choice)
 
