@@ -107,7 +107,6 @@ class Worker:
                         a, v = self.env.get_expert_action_value()
 
                     # Create step
-
                     try:
                         s1, r, done, _ = self.env.step(a)
                     except Exception as e:
