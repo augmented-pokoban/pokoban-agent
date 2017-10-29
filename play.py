@@ -35,8 +35,8 @@ with tf.Session() as sess:
     coord = tf.train.Coordinator()
 
     print('Loading Model...')
-    # ckpt = tf.train.get_checkpoint_state(model_path)
-    # saver.restore(sess, ckpt.model_checkpoint_path)
+    ckpt = tf.train.get_checkpoint_state(model_path)
+    saver.restore(sess, ckpt.model_checkpoint_path)
 
     for i in range(1):
         workers[0].play(sess, 0, level=level)

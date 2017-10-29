@@ -37,7 +37,7 @@ with tf.device("/cpu:0"):
 
         # Only worker 0 are self_exploring
         workers.append(
-            Worker(i, (height, width, depth, s_size), a_size, trainer, model_path, global_episodes, i == 0))
+            Worker(i, (height, width, depth, s_size), a_size, trainer, model_path, global_episodes, True))
     saver = tf.train.Saver(max_to_keep=5)
 
 with tf.Session() as sess:
