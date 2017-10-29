@@ -79,7 +79,7 @@ class Env:
         # Then simply overwrite and return
 
         if self._store and self._game_id is not None or self._game_id is not None:
-            print('Terminating game:', self._game_id if self._game_id is not None else 'expert game')
+            # print('Terminating game:', self._game_id if self._game_id is not None else 'expert game')
             api.terminate(self._game_id, self._store, description=description)
             self._game_id = None
 
