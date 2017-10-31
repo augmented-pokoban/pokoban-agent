@@ -41,7 +41,7 @@ class Env:
 
         if self._use_server:
             map_choice = choice(self._maps) if level is None else level
-            self._game_id, initial = api.init(map_choice)
+            self._game_id, initial = api.init(map_choice,unsupervised=True)
             # print("Playing game: ", map_choice)
 
         else:
@@ -52,7 +52,7 @@ class Env:
             initial = self._map.initial
 
             if store:
-                self._game_id, _ = api.init(self._map.level)
+                self._game_id, _ = api.init(self._map.level, unsupervised=False)
 
         self._store = store
         return state_to_matrix(initial, initial.dims)

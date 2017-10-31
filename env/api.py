@@ -16,8 +16,11 @@ def get_expert_game(game_id):
     return requests.get(base_url + 'pokoban/' + game_id).json()
 
 
-def init(game_file):
-    result = requests.post(base_url + 'pokoban/' + game_file).json()
+def init(game_file, unsupervised):
+
+    path = 'unsupervised' if unsupervised else 'supervised'
+
+    result = requests.post(base_url + 'pokoban/' + path + '/' + game_file).json()
     return result['gameID'], State(result['state'])
 
 
