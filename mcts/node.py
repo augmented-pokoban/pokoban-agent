@@ -1,7 +1,7 @@
-from random import sample, shuffle
+from random import shuffle
 
 
-class Node():
+class Node:
     def __init__(self, state, action_count, parent=None, action=None):
         self.visits = 1
         self.value = 0.0

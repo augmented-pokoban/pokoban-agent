@@ -28,7 +28,7 @@ class Env:
         ]
 
         if self._use_server and not game_id:
-            self._maps = list(map(lambda level: level['filename'], api.get_map_list()))
+            self._maps = api.get_unsupervised_map_list()
         elif not self._use_server:
             self._maps = list(map(lambda expert_games: expert_games['id'], api.get_expert_list()))
 

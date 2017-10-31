@@ -1,7 +1,6 @@
 import math
 import random
 
-from env.mapper import state_to_matrix
 from helper import process_frame
 from mcts.node import Node
 
