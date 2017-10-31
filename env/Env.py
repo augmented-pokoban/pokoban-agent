@@ -40,12 +40,12 @@ class Env:
         self.terminate()
 
         if self._use_server:
-            map_choice = choice(self._maps) if level is None else level
-            self._game_id, initial = api.init(map_choice,unsupervised=True)
+            map_choice = self._maps.pop() if level is None else level
+            self._game_id, initial = api.init(map_choice, unsupervised=True)
             # print("Playing game: ", map_choice)
 
         else:
-            map_id = choice(self._maps)
+            map_id = self._maps.pop()
             self._map = ExpertMoves(api.get_expert_game(map_id))
             # print('Loading map (from expert):', self._map.level)
             self._cur_action = 0
@@ -62,7 +62,7 @@ class Env:
             raise Exception('Cannot use server when getting expert actions')
 
         transition = self._map.get_transition(self._cur_action)
-        return self._actions.index(transition.action), self._map.value_fn
+        return self._actions.index(transition.action), self._map.value
 
     def step(self, action=None):
         if (self._use_server or self._store) and action is None:
@@ -88,6 +88,9 @@ class Env:
             self._game_id = None
 
         self._store = False
+
+    def has_more_data(self):
+        return any(self._maps)
 
     def get_action_meanings(self):
         return self._actions

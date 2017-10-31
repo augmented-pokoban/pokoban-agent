@@ -5,15 +5,15 @@ base_url = 'http://localhost:8080/pokoban-server/api/'
 
 
 def get_unsupervised_map_list():
-    return requests.get(base_url + 'levels/supervised').json()
+    return requests.get(base_url + 'levels/unsupervised', params={'limit': 1000000}).json()
 
 
 def get_expert_list():
-    return requests.get(base_url + 'pokoban').json()
+    return requests.get(base_url + 'pokoban/saves', params={'limit': 1000000}).json()
 
 
 def get_expert_game(game_id):
-    return requests.get(base_url + 'pokoban/' + game_id).json()
+    return requests.get(base_url + 'pokoban/saves/' + game_id).json()
 
 
 def init(game_file, unsupervised):
@@ -34,5 +34,6 @@ def step(game_id, action):
 
 
 def terminate(game_id, store=False, description='', is_planner=False):
-    requests.delete(base_url + 'pokoban/' + game_id, params={'store': store, 'description': description,
+    requests.delete(base_url + 'pokoban/' + game_id, params={'store': store,
+                                                             'description': description,
                                                              'is_planner': is_planner})

@@ -11,8 +11,8 @@ width = 20
 depth = 8
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env(use_server=False).get_action_meanings())  # Agent can move Left, Right, or Fire
-load_model = True
-level = 'medium_1_box_1'  # Or else set it to None
+load_model = False
+level = None
 model_path = './model'
 
 tf.reset_default_graph()

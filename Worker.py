@@ -80,7 +80,7 @@ class Worker:
         with sess.as_default(), sess.graph.as_default():
 
             # This is the beginning of an episode
-            while not coord.should_stop():
+            while not coord.should_stop() and self.env.has_more_data():
                 sess.run(self.update_local_ops)
                 episode_buffer = []
                 episode_values = []
@@ -129,8 +129,6 @@ class Worker:
                     total_steps += 1
                     episode_step_count += 1
 
-                    #TODO: Jeg er kommet hertil i copy fra work til work_mcts
-
                     # If the episode hasn't ended, but the experience buffer is full, then we
                     # make an update step using that experience rollout.
                     if len(episode_buffer) == max_buffer_length and not done \
@@ -151,25 +149,27 @@ class Worker:
                 if len(episode_buffer) is not 0:
                     v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
 
-                # Periodically save gifs of episodes, model parameters, and summary statistics.
+                # Periodically save model parameters, and summary statistics.
                 if episode_count % 5 == 0:
+                    if self.name == 'worker_0':
+                        print('Episode:', episode_count, 'steps: ', episode_step_count)
                     if episode_count % 250 == 0 and self.name == 'worker_0':
-                        print('Episode:', episode_count, 'steps: ', episode_step_count, ': Saved model')
-                        saver.save(sess, self.model_path + '/model-' + str(episode_count) + '.cptk')
+                        print('Saved model')
+                        self.save(saver, sess, episode_count)
                         self.play(sess, episode_count)
 
                     mean_reward = np.mean(self.episode_rewards[-5:])
                     mean_length = np.mean(self.episode_lengths[-5:])
                     mean_value = np.mean(self.episode_mean_values[-5:])
                     summary = tf.Summary()
-                    summary.value_fn.add(tag='Perf/Reward', simple_value=float(mean_reward))
-                    summary.value_fn.add(tag='Perf/Length', simple_value=float(mean_length))
-                    summary.value_fn.add(tag='Perf/Value', simple_value=float(mean_value))
-                    summary.value_fn.add(tag='Losses/Value Loss', simple_value=float(v_l))
-                    summary.value_fn.add(tag='Losses/Policy Loss', simple_value=float(p_l))
-                    summary.value_fn.add(tag='Losses/Entropy', simple_value=float(e_l))
-                    summary.value_fn.add(tag='Losses/Grad Norm', simple_value=float(g_n))
-                    summary.value_fn.add(tag='Losses/Var Norm', simple_value=float(v_n))
+                    summary.value.add(tag='Perf/Reward', simple_value=float(mean_reward))
+                    summary.value.add(tag='Perf/Length', simple_value=float(mean_length))
+                    summary.value.add(tag='Perf/Value', simple_value=float(mean_value))
+                    summary.value.add(tag='Losses/Value Loss', simple_value=float(v_l))
+                    summary.value.add(tag='Losses/Policy Loss', simple_value=float(p_l))
+                    summary.value.add(tag='Losses/Entropy', simple_value=float(e_l))
+                    summary.value.add(tag='Losses/Grad Norm', simple_value=float(g_n))
+                    summary.value.add(tag='Losses/Var Norm', simple_value=float(v_n))
                     self.summary_writer.add_summary(summary, episode_count)
 
                     self.summary_writer.flush()
@@ -177,6 +177,9 @@ class Worker:
                     sess.run(self.increment)
 
                 episode_count += 1
+
+            print(self.name, 'completed training in episode', str(episode_count))
+            self.save(saver, sess, episode_count)
 
     def play(self, sess, episode_count, level=None):
 
@@ -204,6 +207,9 @@ class Worker:
 
         play_env.terminate('episode count: ' + str(episode_count))
         print('Test trial terminated')
+
+    def save(self, saver, sess, episode_count):
+        saver.save(sess, self.model_path + '/model-' + str(episode_count) + '.cptk')
 
     def eval_fn(self, sess, state, rnn_state, deterministic=False):
 

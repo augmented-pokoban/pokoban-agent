@@ -2,6 +2,7 @@
   <dictionary name="Anders">
     <words>
       <w>backpropagate</w>
+      <w>cptk</w>
       <w>mcts</w>
       <w>timestep</w>
     </words>
