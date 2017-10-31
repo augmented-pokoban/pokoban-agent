@@ -12,9 +12,17 @@ def get_expert_list():
     return requests.get(base_url).json()
 
 
+def get_expert_game(game_id):
+    return requests.get(base_url + game_id).json()
+
+
 def init(game_file):
     result = requests.post(base_url + game_file).json()
     return result['gameID'], State(result['state'])
+
+
+def copy_game(game_id):
+    return requests.post(base_url + game_id + '/copy').json()
 
 
 def step(game_id, action):

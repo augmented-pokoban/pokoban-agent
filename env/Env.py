@@ -3,14 +3,15 @@ from random import choice
 import env.api as api
 from env.expert_moves import ExpertMoves
 
+
 class Env:
 
-    def __init__(self, use_server=True):
+    def __init__(self, use_server=True, game_id=None):
         self._use_server = use_server
         self._store = False
         self._map = None
         self._cur_action = None
-        self._game_id = None
+        self._game_id = game_id
         self._actions = [
             'MOVE_NORTH',
             'MOVE_SOUTH',
@@ -26,11 +27,13 @@ class Env:
             'PUSH_WEST'
         ]
 
-        if self._use_server:
+        if self._use_server and not game_id:
             self._maps = list(map(lambda level: level['filename'], api.get_map_list()))
-        else:
-            self._maps = list(map(lambda expert_moves: ExpertMoves(expert_moves), api.get_expert_list()))
-            # self._expert = Data()
+        elif not self._use_server:
+            self._maps = list(map(lambda expert_games: expert_games['id'], api.get_expert_list()))
+
+    def get_action_count(self):
+        return len(self._actions)
 
     def reset(self, store=False, level=None):
 
@@ -42,7 +45,8 @@ class Env:
             # print("Playing game: ", map_choice)
 
         else:
-            self._map = choice(self._maps)
+            map_id = choice(self._maps)
+            self._map = ExpertMoves(api.get_expert_game(map_id))
             # print('Loading map (from expert):', self._map.level)
             self._cur_action = 0
             initial = self._map.initial
@@ -58,7 +62,7 @@ class Env:
             raise Exception('Cannot use server when getting expert actions')
 
         transition = self._map.get_transition(self._cur_action)
-        return self._actions.index(transition.action), self._map.value
+        return self._actions.index(transition.action), self._map.value_fn
 
     def step(self, action=None):
         if (self._use_server or self._store) and action is None:
@@ -69,7 +73,7 @@ class Env:
         if not self._use_server:  # We do this to allow for store hitting both branches
             transition = self._map.get_transition(self._cur_action)
 
-            # important to increment AFTER transtition is extracted
+            # important to increment AFTER transition is extracted
             self._cur_action += 1
 
         return state_to_matrix(transition.state, transition.state.dims), transition.reward, transition.done, transition.success
@@ -88,6 +92,11 @@ class Env:
     def get_action_meanings(self):
         return self._actions
 
+    def copy(self, store=False):
+        game_id = api.copy_game(self._game_id)
+        env = Env(game_id=game_id['gameID'])
+        env._store = store
+        return env
 
 
 

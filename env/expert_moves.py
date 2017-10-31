@@ -32,7 +32,7 @@ class Transition:
 
 class PokobanObject:
 
-    def __init__(self, object):
-        self.col = object['col']
-        self.row = object['row']
-        self.letter = object['letter']
+    def __init__(self, obj):
+        self.col = obj['col']
+        self.row = obj['row']
+        self.letter = obj['letter']

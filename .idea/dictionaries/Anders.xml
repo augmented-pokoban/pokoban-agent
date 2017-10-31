@@ -1,6 +1,8 @@
 <component name="ProjectDictionaryState">
   <dictionary name="Anders">
     <words>
+      <w>backpropagate</w>
+      <w>mcts</w>
       <w>timestep</w>
     </words>
   </dictionary>

@@ -4,12 +4,15 @@ from Network import *
 from helper import update_target_graph, discount, process_frame
 import numpy as np
 from env.Env import Env
-from random import choice
-
 
 # noinspection PyAttributeOutsideInit
+from mcts.mcts import MCTS
+from mcts.network_wrapper import NetworkWrapper
+
+
 class Worker:
-    def __init__(self, name, dimensions, a_size, trainer, model_path, global_episodes, explore_self=True):
+    def __init__(self, name, dimensions, a_size, trainer, model_path, global_episodes, explore_self=True,
+                 use_mcts=False, searches=10):
         self.name = "worker_" + str(name)
         self.number = name
         self.model_path = model_path
@@ -21,6 +24,8 @@ class Worker:
         self.episode_mean_values = []
         self.summary_writer = tf.summary.FileWriter("train_" + str(self.number))
         self.explore_self = explore_self
+        self.use_mcts = use_mcts
+        self.searches = searches
 
         self.height, self.width, depth, self.s_size = dimensions
 
@@ -89,20 +94,20 @@ class Worker:
                 rnn_state = self.local_AC.state_init
                 self.batch_rnn_state = rnn_state
 
+                mcts = None
+                if self.use_mcts:
+                    mcts = MCTS(s, 50, self.env, NetworkWrapper(sess, rnn_state, self.eval_fn))
+
                 while not done and episode_step_count < max_episode_length:
-                    if self.explore_self:
-                        a_dist, v, rnn_state = sess.run(
-                            [self.local_AC.policy, self.local_AC.value, self.local_AC.state_out],
-                            feed_dict={self.local_AC.inputs: [s],
-                                       self.local_AC.state_in[0]: rnn_state[0],
-                                       self.local_AC.state_in[1]: rnn_state[1]})
+                    if self.use_mcts:
+                        if not self.explore_self:
+                            print('The worker should be set to explore self when using MCTS. Terminating...')
+                            sys.exit(1)
 
-                        # Select the action using the prop distribution given in a_dist from previously
-                        if np.isnan(a_dist[0]).any():
-                            print(a_dist[0])
-
-                        a = np.random.choice(self.actions, p=a_dist[0])
-                        v = v[0, 0]
+                        a = mcts.search(self.searches)
+                        v = self.value_fn(sess, s, rnn_state)
+                    elif self.explore_self:
+                        a, v, rnn_state = self.eval_fn(sess, s, rnn_state)
                     else:
                         a, v = self.env.get_expert_action_value()
 
@@ -124,16 +129,15 @@ class Worker:
                     total_steps += 1
                     episode_step_count += 1
 
+                    #TODO: Jeg er kommet hertil i copy fra work til work_mcts
+
                     # If the episode hasn't ended, but the experience buffer is full, then we
                     # make an update step using that experience rollout.
                     if len(episode_buffer) == max_buffer_length and not done \
                             and episode_step_count != max_episode_length - 1:
                         # Since we don't know what the true final return is, we "bootstrap" from our current
                         # value estimation.
-                        v1 = sess.run(self.local_AC.value,
-                                      feed_dict={self.local_AC.inputs: [s],
-                                                 self.local_AC.state_in[0]: rnn_state[0],
-                                                 self.local_AC.state_in[1]: rnn_state[1]})[0, 0]
+                        v1 = self.value_fn(sess, s, rnn_state)
                         # Train here
                         v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, v1)
                         episode_buffer = []
@@ -158,14 +162,14 @@ class Worker:
                     mean_length = np.mean(self.episode_lengths[-5:])
                     mean_value = np.mean(self.episode_mean_values[-5:])
                     summary = tf.Summary()
-                    summary.value.add(tag='Perf/Reward', simple_value=float(mean_reward))
-                    summary.value.add(tag='Perf/Length', simple_value=float(mean_length))
-                    summary.value.add(tag='Perf/Value', simple_value=float(mean_value))
-                    summary.value.add(tag='Losses/Value Loss', simple_value=float(v_l))
-                    summary.value.add(tag='Losses/Policy Loss', simple_value=float(p_l))
-                    summary.value.add(tag='Losses/Entropy', simple_value=float(e_l))
-                    summary.value.add(tag='Losses/Grad Norm', simple_value=float(g_n))
-                    summary.value.add(tag='Losses/Var Norm', simple_value=float(v_n))
+                    summary.value_fn.add(tag='Perf/Reward', simple_value=float(mean_reward))
+                    summary.value_fn.add(tag='Perf/Length', simple_value=float(mean_length))
+                    summary.value_fn.add(tag='Perf/Value', simple_value=float(mean_value))
+                    summary.value_fn.add(tag='Losses/Value Loss', simple_value=float(v_l))
+                    summary.value_fn.add(tag='Losses/Policy Loss', simple_value=float(p_l))
+                    summary.value_fn.add(tag='Losses/Entropy', simple_value=float(e_l))
+                    summary.value_fn.add(tag='Losses/Grad Norm', simple_value=float(g_n))
+                    summary.value_fn.add(tag='Losses/Var Norm', simple_value=float(v_n))
                     self.summary_writer.add_summary(summary, episode_count)
 
                     self.summary_writer.flush()
@@ -192,14 +196,9 @@ class Worker:
 
         while not done and t < 300:
             if not success:
-                a = choice(self.actions)
+                a, v, rnn_state = self.eval_fn(sess, s, rnn_state, deterministic=False)
             else:
-                a_dist, v, rnn_state = sess.run(
-                    [self.local_AC.policy, self.local_AC.value, self.local_AC.state_out],
-                    feed_dict={self.local_AC.inputs: [s],
-                               self.local_AC.state_in[0]: rnn_state[0],
-                               self.local_AC.state_in[1]: rnn_state[1]})
-                a = np.argmax(a_dist)
+                a, v, rnn_state = self.eval_fn(sess, s, rnn_state, deterministic=True)
 
             s, r, done, success = self.env.step(a)
             s = process_frame(s, self.s_size)
@@ -207,3 +206,30 @@ class Worker:
 
         self.env.terminate('episode count: ' + str(episode_count))
         print('Test trial terminated')
+
+    def eval_fn(self, sess, state, rnn_state, deterministic=False):
+
+        a_dist, v, rnn_state = sess.run(
+            [self.local_AC.policy, self.local_AC.value, self.local_AC.state_out],
+            feed_dict={self.local_AC.inputs: [state],
+                       self.local_AC.state_in[0]: rnn_state[0],
+                       self.local_AC.state_in[1]: rnn_state[1]})
+
+        # Select the action using the prop distribution given in a_dist from previously
+        if np.isnan(a_dist[0]).any():
+            print(a_dist[0])
+
+        a, v = None, v[0, 0]
+
+        if deterministic:
+            a = np.argmax(a_dist)
+        else:
+            a = np.random.choice(self.actions, p=a_dist[0])
+
+        return a, v, rnn_state
+
+    def value_fn(self, sess, state, rnn_state):
+        return sess.run(self.local_AC.value,
+                        feed_dict={self.local_AC.inputs: [state],
+                                   self.local_AC.state_in[0]: rnn_state[0],
+                                   self.local_AC.state_in[1]: rnn_state[1]})[0, 0]

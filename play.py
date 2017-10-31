@@ -12,7 +12,7 @@ depth = 8
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env(use_server=False).get_action_meanings())  # Agent can move Left, Right, or Fire
 load_model = True
-level = 'medium_1_box_1' # Or else set it to None
+level = 'medium_1_box_1'  # Or else set it to None
 model_path = './model'
 
 tf.reset_default_graph()
@@ -34,9 +34,12 @@ with tf.device("/cpu:0"):
 with tf.Session() as sess:
     coord = tf.train.Coordinator()
 
-    print('Loading Model...')
-    ckpt = tf.train.get_checkpoint_state(model_path)
-    saver.restore(sess, ckpt.model_checkpoint_path)
+    if load_model:
+        print('Loading Model...')
+        ckpt = tf.train.get_checkpoint_state(model_path)
+        saver.restore(sess, ckpt.model_checkpoint_path)
+    else:
+        sess.run(tf.global_variables_initializer())
 
     for i in range(1):
         workers[0].play(sess, 0, level=level)
