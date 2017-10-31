@@ -28,7 +28,7 @@ class Env:
         ]
 
         if self._use_server and not game_id:
-            self._maps = api.get_unsupervised_map_list()
+            self._maps = api.get_unsupervised_map_list()['data']
         elif not self._use_server:
             self._maps = list(map(lambda expert_games: expert_games['id'], api.get_expert_list()))
 
@@ -67,6 +67,9 @@ class Env:
     def step(self, action=None):
         if (self._use_server or self._store) and action is None:
             raise Exception('No action given when environment is set to use server or store the game. Go fuck yourself')
+
+        # To remove IDE complains
+        transition = None
 
         if self._use_server or self._store:
             transition = api.step(self._game_id, self._actions[action])

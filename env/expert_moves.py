@@ -7,6 +7,11 @@ class ExpertMoves:
         self.value = sum(map(lambda trans: trans.reward, self.transitions))
 
     def get_transition(self, index):
+        if len(self.transitions) == index:
+            trans = self.transitions[index-1]
+            trans.done = True
+            return trans
+
         return self.transitions[index]
 
 
