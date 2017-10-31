@@ -29,7 +29,7 @@ def copy_game(game_id):
 
 
 def step(game_id, action):
-    result = requests.post(base_url + 'pokoban/' + game_id + '/' + action).json()
+    result = requests.put(base_url + 'pokoban/' + game_id + '/' + action).json()
     return Transition(result)
 
 
