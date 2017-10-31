@@ -92,6 +92,12 @@ class Env:
     def get_action_meanings(self):
         return self._actions
 
+    def get_play_env(self):
+        if self._use_server:
+            return self
+
+        return Env(True)
+
     def copy(self, store=False):
         game_id = api.copy_game(self._game_id)
         env = Env(game_id=game_id['gameID'])

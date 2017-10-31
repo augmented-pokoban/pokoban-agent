@@ -180,12 +180,10 @@ class Worker:
 
     def play(self, sess, episode_count, level=None):
 
-        if not self.explore_self:
-            print('Play must be done using a explore_self environment')
-            return
+        play_env = self.env.get_play_env()
 
         done = False
-        s = self.env.reset(store=True, level=level)
+        s = play_env.reset(store=True, level=level)
         s = process_frame(s, self.s_size)
 
         rnn_state = self.local_AC.state_init
@@ -200,11 +198,11 @@ class Worker:
             else:
                 a, v, rnn_state = self.eval_fn(sess, s, rnn_state, deterministic=True)
 
-            s, r, done, success = self.env.step(a)
+            s, r, done, success = play_env.step(a)
             s = process_frame(s, self.s_size)
             t += 1
 
-        self.env.terminate('episode count: ' + str(episode_count))
+        play_env.terminate('episode count: ' + str(episode_count))
         print('Test trial terminated')
 
     def eval_fn(self, sess, state, rnn_state, deterministic=False):
