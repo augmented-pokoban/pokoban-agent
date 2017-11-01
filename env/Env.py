@@ -6,13 +6,7 @@ from env.expert_moves import ExpertMoves
 
 class Env:
 
-    def __init__(self, use_server=True, game_id=None):
-        self._use_server = use_server
-        self._store = False
-        self._map = None
-        self._cur_action = None
-        self._game_id = game_id
-        self._actions = [
+    _actions = [
             'MOVE_NORTH',
             'MOVE_SOUTH',
             'MOVE_EAST',
@@ -26,6 +20,13 @@ class Env:
             'PUSH_EAST',
             'PUSH_WEST'
         ]
+
+    def __init__(self, use_server=True, game_id=None):
+        self._use_server = use_server
+        self._store = False
+        self._map = None
+        self._cur_action = None
+        self._game_id = game_id
 
         if self._use_server and not game_id:
             self._maps = api.get_unsupervised_map_list()['data']
@@ -95,8 +96,9 @@ class Env:
     def has_more_data(self):
         return any(self._maps)
 
-    def get_action_meanings(self):
-        return self._actions
+    @staticmethod
+    def get_action_meanings():
+        return Env._actions
 
     def get_play_env(self):
         if self._use_server:

@@ -10,7 +10,7 @@ height = 20
 width = 20
 depth = 8
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
-a_size = len(Env(use_server=False).get_action_meanings())  # Agent can move Left, Right, or Fire
+a_size = len(Env.get_action_meanings())  # Agent can move Left, Right, or Fire
 load_model = False
 level = None
 model_path = './model'
