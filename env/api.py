@@ -4,8 +4,8 @@ from env.expert_moves import State, Transition
 base_url = 'http://localhost:8080/pokoban-server/api/'
 
 
-def get_unsupervised_map_list():
-    return requests.get(base_url + 'levels/unsupervised', params={'limit': 1000000}).json()
+def get_unsupervised_map_list(skip=0):
+    return requests.get(base_url + 'levels/unsupervised', params={'skip': skip, 'limit': 1000000}).json()
 
 
 def get_expert_list():

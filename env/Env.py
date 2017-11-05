@@ -1,5 +1,5 @@
 from env.mapper import *
-from random import choice
+from random import choice, shuffle
 import env.api as api
 from env.expert_moves import ExpertMoves
 
@@ -30,6 +30,7 @@ class Env:
 
         if self._use_server and not game_id:
             self._maps = api.get_unsupervised_map_list()['data']
+            shuffle(self._maps)
         elif not self._use_server:
             self._maps = list(map(lambda expert_games: expert_games['id'], api.get_expert_list()))
 
