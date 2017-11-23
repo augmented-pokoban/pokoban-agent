@@ -5,21 +5,20 @@ from env.expert_moves import ExpertMoves
 
 
 class Env:
-
     _actions = [
-            'MOVE_NORTH',
-            'MOVE_SOUTH',
-            'MOVE_EAST',
-            'MOVE_WEST',
-            'PULL_NORTH',
-            'PULL_SOUTH',
-            'PULL_EAST',
-            'PULL_WEST',
-            'PUSH_NORTH',
-            'PUSH_SOUTH',
-            'PUSH_EAST',
-            'PUSH_WEST'
-        ]
+        'MOVE_NORTH',
+        'MOVE_SOUTH',
+        'MOVE_EAST',
+        'MOVE_WEST',
+        'PULL_NORTH',
+        'PULL_SOUTH',
+        'PULL_EAST',
+        'PULL_WEST'
+        # 'PUSH_NORTH',
+        # 'PUSH_SOUTH',
+        # 'PUSH_EAST',
+        # 'PUSH_WEST'
+    ]
 
     def __init__(self, use_server=True, game_id=None):
         self._use_server = use_server
@@ -27,34 +26,34 @@ class Env:
         self._map = None
         self._cur_action = None
         self._game_id = game_id
-
+        skip = 0
+        self._batch_size = 100
+        self._total = 0
         if self._use_server and not game_id:
-            self._maps = api.get_unsupervised_map_list()['data']
+            self._maps = self._load_maps(skip, self._batch_size)
             shuffle(self._maps)
-        elif not self._use_server:
-            self._maps = list(map(lambda expert_games: expert_games['id'], api.get_expert_list()))
 
-    def get_action_count(self):
-        return len(self._actions)
+        elif not self._use_server:
+            self._maps = self._load_maps(skip, self._batch_size)
 
     def reset(self, store=False, level=None):
 
         self.terminate()
 
         if self._use_server:
-            map_choice = self._maps.pop() if level is None else level
-            self._game_id, initial = api.init(map_choice, unsupervised=True)
-            # print("Playing game: ", map_choice)
+            map_choice = self._pop() if level is None else level
+            self._game_id, initial = api.init(map_choice)
 
         else:
-            map_id = self._maps.pop()
-            self._map = ExpertMoves(api.get_expert_game(map_id))
+            # Skip moves without a solution since they have no transitions
+            while True:
+                map_id = self._pop()
+                self._map = ExpertMoves(api.get_expert_game(map_id))
+                if any(self._map.transitions):
+                    break
             # print('Loading map (from expert):', self._map.level)
             self._cur_action = 0
             initial = self._map.initial
-
-            if store:
-                self._game_id, _ = api.init(self._map.level, unsupervised=False)
 
         self._store = store
         return state_to_matrix(initial, initial.dims)
@@ -81,7 +80,8 @@ class Env:
             # important to increment AFTER transition is extracted
             self._cur_action += 1
 
-        return state_to_matrix(transition.state, transition.state.dims), transition.reward, transition.done, transition.success
+        return state_to_matrix(transition.state,
+                               transition.state.dims), transition.reward, transition.done, transition.success
 
     def terminate(self, description=''):
         # if store is false, there is no active game on the server
@@ -95,16 +95,35 @@ class Env:
         self._store = False
 
     def has_more_data(self):
-        return any(self._maps)
+        return self._next_skip < self._total or any(self._maps)
+
+    def _pop(self):
+        if self._next_skip < self._total and not any(self._maps):
+            self._maps = self._load_maps(self._next_skip, self._batch_size)
+            self._next_skip += self._batch_size
+
+        return self._maps.pop()
+
+    def _load_maps(self, skip, take):
+        if self._use_server:
+            response = api.get_unsupervised_map_list(skip, take)
+            maps = list(map(lambda level: level['relativePath'], response['data']))
+        else:
+            response = api.get_expert_list(skip=skip, take=take)
+            maps = list(map(lambda expert_games: expert_games['fileRef'], response['data']))
+
+        self._total = response['total']
+        self._next_skip = skip + self._batch_size
+        return maps
+
+    def get_action_count(self):
+        return len(self._actions)
 
     @staticmethod
     def get_action_meanings():
         return Env._actions
 
     def get_play_env(self):
-        if self._use_server:
-            return self
-
         return Env(True)
 
     def copy(self, store=False):
@@ -112,6 +131,3 @@ class Env:
         env = Env(game_id=game_id['gameID'])
         env._store = store
         return env
-
-
-

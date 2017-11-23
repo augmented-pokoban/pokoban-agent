@@ -4,3 +4,4 @@ numpy
 gym[atari]
 Pillow
 requests
+StringIO

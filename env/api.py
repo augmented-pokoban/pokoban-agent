@@ -1,26 +1,29 @@
 import requests
+from urllib.request import urlopen
+from io import BytesIO
+from zipfile import ZipFile
+import json
 from env.expert_moves import State, Transition
 
-base_url = 'http://localhost:8080/pokoban-server/api/'
+base_url = 'http://localhost:5000/api/'
 
 
-def get_unsupervised_map_list(skip=0):
-    return requests.get(base_url + 'levels/unsupervised', params={'skip': skip, 'limit': 1000000}).json()
+def get_unsupervised_map_list(skip=0, take=10000):
+    return requests.get(base_url + 'levels/unsupervised', params={'skip': skip, 'limit': take}).json()
 
 
-def get_expert_list():
-    return requests.get(base_url + 'pokoban/saves', params={'limit': 1000000}).json()
+def get_expert_list(skip=0, take=10000):
+    return requests.get(base_url + 'pokoban/saves', params={'skip': skip, 'limit': take}).json()
 
 
-def get_expert_game(game_id):
-    return requests.get(base_url + 'pokoban/saves/' + game_id).json()
+# TODO: Insert new base url that points to the file storage
+def get_expert_game(file_ref):
+    zip_file = ZipFile(BytesIO(urlopen(file_ref).read()))
+    return json.loads(zip_file.open(zip_file.namelist()[0]).read())
 
 
-def init(game_file, unsupervised):
-
-    path = 'unsupervised' if unsupervised else 'supervised'
-
-    result = requests.post(base_url + 'pokoban/' + path + '/' + game_file).json()
+def init(game_file):
+    result = requests.post(base_url + 'pokoban/' + game_file.replace('/', '_')).json()
     return result['gameID'], State(result['state'])
 
 
