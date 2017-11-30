@@ -1,6 +1,4 @@
 import tensorflow as tf
-import scipy.misc
-import scipy.signal
 import numpy as np
 
 
@@ -30,7 +28,17 @@ def process_frame(s, s_size):
 
 # Discounting function used to calculate discounted returns.
 def discount(x, gamma):
-    return scipy.signal.lfilter([1], [1, -gamma], x[::-1], axis=0)[::-1]
+    rewards = np.empty(len(x))
+    cum_reward = 0
+
+    for step in reversed(range(len(x))):
+        cum_reward = x[step] + cum_reward * gamma
+        rewards[step] = cum_reward
+    return rewards
+
+#
+# def discount_old(x, gamma):
+#     return scipy.signal.lfilter([1], [1, -gamma], x[::-1], axis=0)[::-1]
 
 
 # Used to initialize weights for policy and value output layers
