@@ -15,11 +15,11 @@ class Network():
 
             self.conv1 = slim.conv2d(activation_fn=tf.nn.elu,
                                      inputs=self.imageIn, num_outputs=16,
-                                     kernel_size=[5, 5], stride=[2, 2], padding='VALID')
+                                     kernel_size=[3, 3], stride=[1, 1], padding='VALID')
 
             self.conv2 = slim.conv2d(activation_fn=tf.nn.elu,
                                      inputs=self.conv1, num_outputs=32,
-                                     kernel_size=[3, 3], stride=[1, 1], padding='VALID')
+                                     kernel_size=[3, 3], stride=[2, 2], padding='VALID')
 
             # self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
             #                          inputs=self.conv2, num_outputs=32,
