@@ -10,7 +10,7 @@ base_url = 'http://pokoban-server.azurewebsites.net/api/'
 
 def get_unsupervised_map_list(skip=0, take=10000):
     params = {'skip': skip, 'limit': take}
-    return get_request('levels/unsupervised', params)
+    return get_request('levels/supervised', params)
 
 
 def get_expert_list(skip=0, take=10000):
@@ -23,7 +23,7 @@ def get_expert_game(file_ref):
 
 
 def init(game_file):
-    result = post_request('pokoban/' + game_file.replace('/', '_'), None, '')
+    result = post_request('pokoban/' + game_file.replace('/', '_'))
     return result['gameID'], State(result['state'])
 
 
@@ -46,7 +46,7 @@ def terminate(game_id, store=False, description='', is_planner=False):
 
 
 class RequestWithMethod(urllib.request.Request):
-    def __init__(self, url, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         self._method = kwargs.pop('method', None)
         urllib.request.Request.__init__(self, *args, **kwargs)
 
@@ -58,7 +58,6 @@ def get_request(url, url_params):
     url += '?' + urllib.parse.urlencode(url_params)
     print(base_url + url)
     with urllib.request.urlopen(base_url + url) as response:
-        print(response)
         data = response.read()
         encoding = response.info().get_content_charset('utf-8')
         return json.loads(data.decode(encoding))
@@ -66,7 +65,7 @@ def get_request(url, url_params):
 
 def put_request(url):
     opener = urllib.request.build_opener(urllib.request.HTTPHandler)
-    request = RequestWithMethod(base_url + url, method='PUT', data=None)
+    request = RequestWithMethod(url=base_url + url, method='PUT', data=None)
     with opener.open(request) as response:
         data = response.read()
         encoding = response.info().get_content_charset('utf-8')
@@ -76,13 +75,13 @@ def put_request(url):
 def delete_request(url, url_params):
     url += '?' + urllib.parse.urlencode(url_params)
     opener = urllib.request.build_opener(urllib.request.HTTPHandler)
-    request = RequestWithMethod(base_url + url, method='DELETE')
+    request = RequestWithMethod(url=base_url + url, method='DELETE')
     opener.open(request)
 
 
 def post_request(url):
     opener = urllib.request.build_opener(urllib.request.HTTPHandler)
-    request = RequestWithMethod(base_url + url, method='POST', data=None)
+    request = RequestWithMethod(url=base_url + url, method='POST', data=None)
     with opener.open(request) as response:
         data = response.read()
         encoding = response.info().get_content_charset('utf-8')
