@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
+from env.Env import Env
 
 from autoencoder.EncoderNetwork import EncoderNetwork
 
@@ -12,6 +13,7 @@ height = 20
 width = 20
 depth = 8
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
+a_size = len(Env.get_action_meanings())  # Agent can move in many directions
 load_model = False
 model_path = './enc_model'
 
@@ -22,7 +24,7 @@ if not os.path.exists(model_path):
 
 trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4, epsilon=0.1, decay=0.99)
 saver = tf.train.Saver(max_to_keep=5)
-network = EncoderNetwork(height, width, depth, s_size, 'global', trainer)
+network = EncoderNetwork(height, width, depth, s_size, a_size, 'global', trainer)
 
 with tf.Session() as sess:
 
