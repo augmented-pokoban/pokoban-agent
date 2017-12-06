@@ -7,7 +7,7 @@ from helper import normalized_columns_initializer
 
 class EncoderNetwork:
 
-    def __init__(self, height, width, depth, s_size, a_size, scope, trainer):
+    def __init__(self, height, width, depth, s_size, a_size, r_size, scope, trainer):
         with tf.variable_scope(scope):
             # Input and visual encoding layers
             self.inputs = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
@@ -47,9 +47,17 @@ class EncoderNetwork:
                                                  biases_initializer=None)
 
             # value = reward
-            self.value = slim.fully_connected(enc_out, 1,
-                                              activation_fn=None,
-                                              weights_initializer=normalized_columns_initializer(1.0),
+            self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
+                                     inputs=self.conv2, num_outputs=32,
+                                     kernel_size=[1, 1], stride=[1, 1], padding='VALID')
+            self.conv4 = slim.conv2d(activation_fn=tf.nn.elu,
+                                     inputs=self.conv3, num_outputs=32,
+                                     kernel_size=[1, 1], stride=[1, 1], padding='VALID')
+
+            self.value = slim.fully_connected(self.conv4,
+                                              r_size,
+                                              activation_fn=tf.nn.softmax,
+                                              weights_initializer=normalized_columns_initializer(0.01),
                                               biases_initializer=None)
 
             # Loss functions
