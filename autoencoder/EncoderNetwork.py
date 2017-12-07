@@ -10,7 +10,7 @@ class EncoderNetwork:
     def __init__(self, height, width, depth, s_size, a_size, r_size, scope, trainer):
         with tf.variable_scope(scope):
             # Input and visual encoding layers
-            self.inputs = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
+            self.input_image = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
             self.action = tf.placeholder(shape=[None, 1], dtype=tf.float32)
             self.enc_target = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
             self.val_target = tf.placeholder(shape=[None, 1], dtype=tf.float32)
@@ -22,7 +22,7 @@ class EncoderNetwork:
 
             # combine input one-hot with action tile one-hot
             actions_tile = tf.ones_like(self.ones_placeholder) * self.actions_onehot
-            self.input_tile = tf.concat([self.inputs, actions_tile], axis=-1)
+            self.input_tile = tf.concat([self.input_image, actions_tile], axis=-1)
 
             self.imageIn = tf.reshape(self.input_tile, shape=[-1, height, width, depth + a_size])
 
