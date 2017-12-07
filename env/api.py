@@ -17,6 +17,10 @@ def get_expert_list(skip=0, take=10000):
     return get_request('pokoban/saves', {'skip': skip, 'limit': take})
 
 
+def get_replays_list(skip=0, take=10000):
+    return get_request('pokoban/replays', {'skip': skip, 'limit': take})
+
+
 def get_expert_game(file_ref):
     zip_file = ZipFile(BytesIO(urllib.request.urlopen(file_ref).read()))
     return json.loads(zip_file.open(zip_file.namelist()[0]).read())

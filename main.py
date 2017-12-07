@@ -17,6 +17,7 @@ depth = 8
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env.get_action_meanings())  # Agent can move in many directions
 load_model = False
+supervised = True
 model_path = './model'
 
 tf.reset_default_graph()
@@ -37,7 +38,7 @@ with tf.device("/cpu:0"):
 
         # Only worker 0 are self_exploring
         workers.append(
-            Worker(i, (height, width, depth, s_size), a_size, trainer, model_path, global_episodes, explore_self=False))
+            Worker(i, (height, width, depth, s_size), a_size, trainer, model_path, global_episodes, explore_self=supervised))
     saver = tf.train.Saver(max_to_keep=5)
 
 with tf.Session() as sess:

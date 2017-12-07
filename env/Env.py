@@ -20,6 +20,13 @@ class Env:
         # 'PUSH_WEST'
     ]
 
+    _rewards = [
+        -1,
+        -0.1,
+        1,
+        10
+    ]
+
     def __init__(self, use_server=True, game_id=None):
         self._use_server = use_server
         self._store = False
@@ -122,6 +129,14 @@ class Env:
     @staticmethod
     def get_action_meanings():
         return Env._actions
+
+    @staticmethod
+    def map_action(action):
+        return Env._actions.index(action)
+
+    @staticmethod
+    def map_reward(reward):
+        return Env._rewards.index(reward)
 
     def get_play_env(self):
         return Env(True)

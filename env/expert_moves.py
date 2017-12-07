@@ -36,7 +36,6 @@ class Transition:
 
 
 class PokobanObject:
-
     def __init__(self, obj):
         self.col = obj['col']
         self.row = obj['row']
