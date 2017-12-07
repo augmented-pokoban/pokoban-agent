@@ -75,6 +75,7 @@ class Worker:
     def work(self, max_episode_length, gamma, sess, coord, saver, max_buffer_length):
         episode_count = sess.run(self.global_episodes)
         total_steps = 0
+        total_levels = 0
         print("Starting worker " + str(self.number))
 
         with sess.as_default(), sess.graph.as_default():
@@ -89,6 +90,7 @@ class Worker:
                 done = False
 
                 s = self.env.reset()
+                total_levels += 1
                 s = process_frame(s, self.s_size)
 
                 rnn_state = self.local_AC.state_init
@@ -170,6 +172,7 @@ class Worker:
                     summary.value.add(tag='Losses/Entropy', simple_value=float(e_l))
                     summary.value.add(tag='Losses/Grad Norm', simple_value=float(g_n))
                     summary.value.add(tag='Losses/Var Norm', simple_value=float(v_n))
+                    summary.value.add(tag='Levels', simple_value=float(total_levels))
                     self.summary_writer.add_summary(summary, episode_count)
 
                     self.summary_writer.flush()
