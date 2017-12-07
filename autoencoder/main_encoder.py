@@ -1,20 +1,20 @@
 import os
-
 import numpy as np
 import tensorflow as tf
+from autoencoder.EncoderData import DataReader
 from env.Env import Env
-
 from autoencoder.EncoderNetwork import EncoderNetwork
+import helper
 
 episode_max = 1000
-batch_size = 64
+batch_size = 32
 gamma = .99  # discount rate for advantage estimation and reward discounting
 height = 20
 width = 20
 depth = 8
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env.get_action_meanings())  # Agent can move in many directions
-r_size = 4  # number of different types of rewards we can get
+r_size = len(Env.get_reward_meanings())  # number of different types of rewards we can get
 # 0 = -1
 # 1 = -0.1
 # 2 = 1
@@ -28,8 +28,9 @@ if not os.path.exists(model_path):
     os.makedirs(model_path)
 
 trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4, epsilon=0.1, decay=0.99)
+network = EncoderNetwork(height, width, depth, s_size, a_size, r_size, batch_size, 'global', trainer)
 saver = tf.train.Saver(max_to_keep=5)
-network = EncoderNetwork(height, width, depth, s_size, a_size, r_size, 'global', trainer)
+data = DataReader()
 
 with tf.Session() as sess:
     if load_model:
@@ -48,28 +49,27 @@ with tf.Session() as sess:
     episode_enc_loss = []
     episode_val_loss = []
 
-    while episode < episode_max:
-
+    while episode < episode_max and data.has_more(batch_size):
+        episode += 1
+        batch = data.get_batch(batch_size)
         # get data
-        x_state = []  # image batch
-        x_action = []  # action batch
-        y_state = []  # target state batch
-        y_reward = []  # target reward batch
-
-        # TODO: Read (state + action) from transition file
+        x_state = np.array(list(map(lambda encoded_data: helper.process_frame(encoded_data.state_x, s_size), batch)))  # image biartch
+        x_action = np.array(list(map(lambda encoded_data: [encoded_data.action], batch)))  # action batch
+        y_state = np.array(list(map(lambda encoded_data: helper.process_frame(encoded_data.state_y, s_size), batch)))  # target state batch
+        y_reward = np.array(list(map(lambda encoded_data: [encoded_data.reward], batch)))  # target reward batch
 
         feed_dict = {
             network.input_image: x_state,
             network.action: x_action,
             network.enc_target: y_state,
-            network.val_target: y_reward
+            network.reward: y_reward
         }
 
         _, enc_loss, val_loss = sess.run(
             [
+                network.train_op,
                 network.encoding_loss,
-                network.value_loss,
-                network.train_op
+                network.value_loss
             ],
             feed_dict=feed_dict
         )
@@ -86,4 +86,9 @@ with tf.Session() as sess:
             summary_writer.add_summary(summary, episode)
             summary_writer.flush()
 
-        episode += 1
+        if episode % 1000 == 0:
+            saver.save(sess, model_path + '/model-' + str(episode) + '.cptk')
+
+    print('Episodes: {}'.format(episode))
+
+

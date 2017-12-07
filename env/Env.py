@@ -14,10 +14,6 @@ class Env:
         'PULL_SOUTH',
         'PULL_EAST',
         'PULL_WEST'
-        # 'PUSH_NORTH',
-        # 'PUSH_SOUTH',
-        # 'PUSH_EAST',
-        # 'PUSH_WEST'
     ]
 
     _rewards = [
@@ -133,6 +129,10 @@ class Env:
     @staticmethod
     def map_action(action):
         return Env._actions.index(action)
+
+    @staticmethod
+    def get_reward_meanings():
+        return Env._rewards
 
     @staticmethod
     def map_reward(reward):

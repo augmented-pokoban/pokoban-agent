@@ -13,8 +13,8 @@ import datetime
 # Convert action to index
 # convert states
 
-max_list_size = 1000
-max_batches = 100
+max_list_size = 128
+max_batches = 1
 expert_ratio = 0.9
 replay_count = 0
 expert_count = 0
