@@ -5,6 +5,7 @@ from zipfile import ZipFile
 import json
 from env.expert_moves import State, Transition
 
+# base_url = 'http://localhost:5000/api/'
 base_url = 'http://pokoban-server.azurewebsites.net/api/'
 
 
