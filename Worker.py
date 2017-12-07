@@ -180,6 +180,7 @@ class Worker:
                     sess.run(self.increment)
 
                 episode_count += 1
+                sys.stdout.flush()
 
             print(self.name, 'completed training in episode', str(episode_count))
             self.save(saver, sess, episode_count)

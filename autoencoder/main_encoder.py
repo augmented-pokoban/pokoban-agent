@@ -1,3 +1,4 @@
+import sys
 import os
 import numpy as np
 import tensorflow as tf
@@ -88,7 +89,10 @@ with tf.Session() as sess:
 
         if episode % 1000 == 0:
             saver.save(sess, model_path + '/model-' + str(episode) + '.cptk')
+            print('Episodes: {}, Encoding loss: {}, Value loss: {}'
+                  .format(episode, episode_enc_loss[-1], episode_val_loss[-1]))
+            sys.stdout.flush()
 
-    print('Episodes: {}'.format(episode))
+    print('Episodes: {} TERMINATE'.format(episode))
 
 
