@@ -15,6 +15,10 @@ depth = 8
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env.get_action_meanings())  # Agent can move in many directions
 r_size = 4  # number of different types of rewards we can get
+# 0 = -1
+# 1 = -0.1
+# 2 = 1
+# 3 = 10
 load_model = False
 model_path = './enc_model'
 
@@ -28,7 +32,6 @@ saver = tf.train.Saver(max_to_keep=5)
 network = EncoderNetwork(height, width, depth, s_size, a_size, r_size, 'global', trainer)
 
 with tf.Session() as sess:
-
     if load_model:
         print('Loading Model...')
         ckpt = tf.train.get_checkpoint_state(model_path)
@@ -53,18 +56,23 @@ with tf.Session() as sess:
         y_state = []  # target state batch
         y_reward = []  # target reward batch
 
+        # TODO: Read (state + action) from transition file
+
         feed_dict = {
-            network.inputs: x_state,
+            network.input_image: x_state,
             network.action: x_action,
             network.enc_target: y_state,
             network.val_target: y_reward
         }
 
         _, enc_loss, val_loss = sess.run(
-                [network.train_op,
-                 network.encoding_loss,
-                 network.value],
-                feed_dict=feed_dict)
+            [
+                network.encoding_loss,
+                network.value_loss,
+                network.train_op
+            ],
+            feed_dict=feed_dict
+        )
 
         episode_enc_loss.append(enc_loss)
         episode_val_loss.append(val_loss)
@@ -79,4 +87,3 @@ with tf.Session() as sess:
             summary_writer.flush()
 
         episode += 1
-
