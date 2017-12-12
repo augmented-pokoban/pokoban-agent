@@ -1,14 +1,11 @@
 import multiprocessing
-from urllib.error import HTTPError
-
-import tensorflow as tf
-import threading
-import os
+import signal
 from time import sleep
-
-from env import api
+import threading
+import tensorflow as tf
+import os
 from env.Env import Env
-
+import sys
 from Network import Network
 from Worker import Worker
 from integrated_server import start_server
@@ -32,7 +29,7 @@ if not os.path.exists(model_path):
 
 # Startup the server for fun and glory
 if not start_server():
-    exit(0)
+    sys.exit(1)
 
 global_episodes = tf.Variable(0, dtype=tf.int32, name='global_episodes', trainable=False)
 trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4, epsilon=0.1, decay=0.99)

@@ -20,7 +20,7 @@ def _start_server():
 
 
 def start_server():
-    server_thread = Thread(target=_start_server)
+    server_thread = Thread(target=_start_server, daemon=True)
     server_thread.start()
 
     sleep(10)
@@ -29,6 +29,7 @@ def start_server():
     while tries < 10:
         try:
             print('Pinging server... ', end='')
+            api.ping_server()
             print('Success')
             return True
         except:
