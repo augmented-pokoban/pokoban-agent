@@ -1,9 +1,11 @@
 import subprocess
 from threading import Thread
 from time import sleep
+from urllib.error import HTTPError
+from env import api
 
 
-def start_server():
+def _start_server():
     print("Starting pokoban-server")
 
     with subprocess.Popen(["java", "-jar", "pokoban-server-0.0.1.jar"],
@@ -17,12 +19,25 @@ def start_server():
         raise subprocess.CalledProcessError(p.returncode, p.args)
 
 
-if __name__ == "__main__":
-    server_thread = Thread(target=start_server)
+def start_server():
+    server_thread = Thread(target=_start_server)
     server_thread.start()
 
     sleep(10)
 
-    # TODO ping server on localhost:5000/api/pokoban/running
+    tries = 0
+    while tries < 10:
+        try:
+            print('Pinging server... ', end='')
+            print('Success')
+            return True
+        except:
+            print('Failure, sleeping for 10 seconds')
+            sleep(10)
 
-    # server_thread.join()  # close the server at some point?
+        tries += 1
+
+    return False
+
+if __name__ == "__main__":
+    start_server()

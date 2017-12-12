@@ -11,6 +11,7 @@ from env.Env import Env
 
 from Network import Network
 from Worker import Worker
+from integrated_server import start_server
 
 max_episode_length = 300
 max_buffer_length = 20
@@ -29,16 +30,9 @@ tf.reset_default_graph()
 if not os.path.exists(model_path):
     os.makedirs(model_path)
 
-while True:
-    try:
-        print('Pinging server...', end='')
-        api.ping_server()
-        print('Success')
-        break
-    except HTTPError:
-        print('Failure, sleeping for 10 seconds')
-        sleep(10)
-
+# Startup the server for fun and glory
+if not start_server():
+    exit(0)
 
 global_episodes = tf.Variable(0, dtype=tf.int32, name='global_episodes', trainable=False)
 trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4, epsilon=0.1, decay=0.99)
