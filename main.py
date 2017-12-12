@@ -1,8 +1,12 @@
 import multiprocessing
+from urllib.error import HTTPError
+
 import tensorflow as tf
 import threading
 import os
 from time import sleep
+
+from env import api
 from env.Env import Env
 
 from Network import Network
@@ -24,6 +28,16 @@ tf.reset_default_graph()
 
 if not os.path.exists(model_path):
     os.makedirs(model_path)
+
+while True:
+    try:
+        print('Pinging server...', end='')
+        api.ping_server()
+        print('Success')
+        break
+    except HTTPError:
+        print('Failure, sleeping for 10 seconds')
+        sleep(10)
 
 
 global_episodes = tf.Variable(0, dtype=tf.int32, name='global_episodes', trainable=False)
