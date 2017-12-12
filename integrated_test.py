@@ -1,10 +1,6 @@
-from subprocess import call
+import subprocess
 from threading import Thread
 from time import sleep
-
-import subprocess
-
-import sys
 
 
 def start_server():
