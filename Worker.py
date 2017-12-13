@@ -4,7 +4,6 @@ from Network import *
 from helper import update_target_graph, discount, process_frame
 import numpy as np
 from env.Env import Env
-
 # noinspection PyAttributeOutsideInit
 from mcts.mcts import MCTS
 from mcts.network_wrapper import NetworkWrapper
@@ -151,14 +150,15 @@ class Worker:
                 if len(episode_buffer) is not 0:
                     v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
 
+                if episode_count % 100 == 0 and self.name == 'worker_0':
+                    print('Saved model')
+                    self.save(saver, sess, episode_count)
+                    self.play(sess, episode_count)
+
                 # Periodically save model parameters, and summary statistics.
                 if episode_count % 5 == 0:
                     if self.name == 'worker_0':
                         print('Episode:', episode_count, 'steps: ', episode_step_count)
-                    if episode_count % 250 == 0 and self.name == 'worker_0':
-                        print('Saved model')
-                        self.save(saver, sess, episode_count)
-                        self.play(sess, episode_count)
 
                     mean_reward = np.mean(self.episode_rewards[-5:])
                     mean_length = np.mean(self.episode_lengths[-5:])
