@@ -5,8 +5,12 @@ from zipfile import ZipFile
 import json
 from env.expert_moves import State, Transition
 
-# base_url = 'http://localhost:5000/api/'
-base_url = 'http://pokoban-server.azurewebsites.net/api/'
+base_url = 'http://localhost:5000/api/'
+# base_url = 'http://pokoban-server.azurewebsites.net/api/'
+
+
+def ping_server():
+    return get_request('pokoban/running', {})
 
 
 def get_unsupervised_map_list(skip=0, take=10000):
@@ -61,7 +65,6 @@ class RequestWithMethod(urllib.request.Request):
 
 def get_request(url, url_params):
     url += '?' + urllib.parse.urlencode(url_params)
-    print(base_url + url)
     with urllib.request.urlopen(base_url + url) as response:
         data = response.read()
         encoding = response.info().get_content_charset('utf-8')

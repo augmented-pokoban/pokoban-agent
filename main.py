@@ -1,12 +1,14 @@
 import multiprocessing
-import tensorflow as tf
-import threading
-import os
+import signal
 from time import sleep
+import threading
+import tensorflow as tf
+import os
 from env.Env import Env
-
+import sys
 from Network import Network
 from Worker import Worker
+from integrated_server import start_server
 
 max_episode_length = 300
 max_buffer_length = 20
@@ -25,6 +27,9 @@ tf.reset_default_graph()
 if not os.path.exists(model_path):
     os.makedirs(model_path)
 
+# Startup the server for fun and glory
+if not start_server():
+    sys.exit(1)
 
 global_episodes = tf.Variable(0, dtype=tf.int32, name='global_episodes', trainable=False)
 trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4, epsilon=0.1, decay=0.99)
