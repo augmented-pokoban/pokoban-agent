@@ -5,6 +5,7 @@ from helper import update_target_graph, discount, process_frame
 import numpy as np
 from env.Env import Env
 # noinspection PyAttributeOutsideInit
+from last_id_store import IdStore
 from mcts.mcts import MCTS
 from mcts.network_wrapper import NetworkWrapper
 
@@ -28,13 +29,13 @@ class Worker:
 
         self.height, self.width, depth, self.s_size = dimensions
 
-        # Create the local copy of the network and the tensorflow op to copy global paramters to local network
+        # Create the local copy of the network and the tensorflow op to copy global parameters to local network
         self.local_AC = Network(self.height, self.width, depth, self.s_size, a_size, self.name, trainer)
         self.update_local_ops = update_target_graph('global', self.name)
 
         # End A3C basic setup
         self.actions = range(a_size)
-        self.env = Env(explore_self)
+        self.env = Env(explore_self, id_store=IdStore(self.name))
 
     def train(self, rollout, sess, gamma, bootstrap_value):
         rollout = np.array(rollout)

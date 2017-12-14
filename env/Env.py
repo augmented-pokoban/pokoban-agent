@@ -23,21 +23,25 @@ class Env:
         10
     ]
 
-    def __init__(self, use_server=True, game_id=None):
+    def __init__(self, use_server=True, id_store=None, game_id=None):
         self._use_server = use_server
+
         self._store = False
         self._map = None
         self._cur_action = None
         self._game_id = game_id
-        skip = 0
         self._batch_size = 100
-        self._total = 0
+
+        self._id_store = id_store
+        self._has_more = True
+        self._last_id = id_store.get_id()
+
         if self._use_server and not game_id:
-            self._maps = self._load_maps(skip, self._batch_size)
+            self._maps = self._load_maps(self._batch_size)
             shuffle(self._maps)
 
         elif not self._use_server:
-            self._maps = self._load_maps(skip, self._batch_size)
+            self._maps = self._load_maps(self._batch_size)
 
     def reset(self, store=False, level=None):
 
@@ -98,25 +102,25 @@ class Env:
         self._store = False
 
     def has_more_data(self):
-        return self._next_skip < self._total or any(self._maps)
+        return self._has_more or any(self._maps)
 
     def _pop(self):
-        if self._next_skip < self._total and not any(self._maps):
-            self._maps = self._load_maps(self._next_skip, self._batch_size)
-            self._next_skip += self._batch_size
+        if self._has_more and not any(self._maps):
+            self._maps = self._load_maps(self._batch_size)
 
         return self._maps.pop()
 
-    def _load_maps(self, skip, take):
+    def _load_maps(self, take):
         if self._use_server:
-            response = api.get_unsupervised_map_list(skip, take)
+            response = api.get_unsupervised_map_list(self._last_id, take)
             maps = list(map(lambda level: level['relativePath'], response['data']))
         else:
-            response = api.get_expert_list(skip=skip, take=take)
+            response = api.get_expert_list(self._last_id, take=take)
             maps = list(map(lambda expert_games: expert_games['fileRef'], response['data']))
 
-        self._total = response['total']
-        self._next_skip = skip + self._batch_size
+        self._last_id = response['data'][-1]['_id']
+        self._id_store.write_id(self._last_id)
+        self._has_more = len(response['data']) == take
         return maps
 
     def get_action_count(self):

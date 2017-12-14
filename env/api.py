@@ -13,13 +13,26 @@ def ping_server():
     return get_request('pokoban/running', {})
 
 
-def get_unsupervised_map_list(skip=0, take=10000):
-    params = {'skip': skip, 'limit': take}
+def get_unsupervised_map_list(last_id=None, take=10000):
+    params = dict()
+    params['skip'] = 0
+    params['limit'] = take
+
+    if last_id is not None:
+        params['last_id'] = last_id
+
     return get_request('levels/supervised', params)
 
 
-def get_expert_list(skip=0, take=10000):
-    return get_request('pokoban/saves', {'skip': skip, 'limit': take})
+def get_expert_list(last_id=None, take=10000):
+    params = dict()
+    params['skip'] = 0
+    params['limit'] = take
+
+    if last_id is not None:
+        params['last_id'] = last_id
+
+    return get_request('pokoban/saves', params)
 
 
 def get_replays_list(skip=0, take=10000):

@@ -20,6 +20,7 @@ a_size = len(Env.get_action_meanings())  # Agent can move in many directions
 load_model = True
 unsupervised = True
 model_path = './model'
+last_id_path = './last_ids'
 
 tf.reset_default_graph()
 
@@ -33,7 +34,7 @@ if not start_server():
 global_episodes = tf.Variable(0, dtype=tf.int32, name='global_episodes', trainable=False)
 trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4, epsilon=0.1, decay=0.99)
 master_network = Network(height, width, depth, s_size, a_size, 'global', None)  # Generate global network
-num_workers = multiprocessing.cpu_count()  # Set workers ot number of available CPU threads
+num_workers = 20  # multiprocessing.cpu_count()  # Set workers ot number of available CPU threads
 
 print('Creating', num_workers, 'workers')
 workers = []
