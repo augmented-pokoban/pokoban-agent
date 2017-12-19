@@ -24,10 +24,11 @@ def get_unsupervised_map_list(last_id=None, take=10000):
     return get_request('levels/supervised', params)
 
 
-def get_expert_list(last_id=None, take=10000):
+def get_expert_list(last_id=None, take=10000, order='desc'):
     params = dict()
     params['skip'] = 0
     params['limit'] = take
+    params['order'] = order
 
     if last_id is not None:
         params['last_id'] = last_id
@@ -35,8 +36,16 @@ def get_expert_list(last_id=None, take=10000):
     return get_request('pokoban/saves', params)
 
 
-def get_replays_list(skip=0, take=10000):
-    return get_request('pokoban/replays', {'skip': skip, 'limit': take})
+def get_replays_list(last_id=None, take=10000, order="desc"):
+    params = dict()
+    params['skip'] = 0
+    params['limit'] = take
+    params['order'] = order
+
+    if last_id is not None:
+        params['last_id'] = last_id
+
+    return get_request('pokoban/replays', params)
 
 
 def get_expert_game(file_ref):

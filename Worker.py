@@ -1,13 +1,13 @@
 import sys
 
-from Network import *
-from helper import update_target_graph, discount, process_frame
 import numpy as np
+
+from Network import *
 from env.Env import Env
-# noinspection PyAttributeOutsideInit
-from last_id_store import IdStore
+from helper import update_target_graph, discount, process_frame
 from mcts.mcts import MCTS
 from mcts.network_wrapper import NetworkWrapper
+from support.last_id_store import IdStore
 
 
 class Worker:

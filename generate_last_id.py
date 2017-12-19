@@ -1,5 +1,5 @@
 from env import api
-from last_id_store import IdStore
+from support.last_id_store import IdStore
 
 last_episode_count = 1200
 workers = 20
