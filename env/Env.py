@@ -1,7 +1,10 @@
+import sys
+
 from env.mapper import *
 from random import choice, shuffle
 import env.api as api
 from env.expert_moves import ExpertMoves
+from support.last_id_store import IdStore
 
 
 class Env:
@@ -94,7 +97,10 @@ class Env:
         # if store is false, there is no active game on the server
         # Then simply overwrite and return
 
-        if self._store and self._game_id is not None or self._game_id is not None:
+        print('{} \t : Terminating game id {}'.format(self._id_store.name, self._game_id))
+        sys.stdout.flush()
+
+        if self._game_id is not None:
             # print('Terminating game:', self._game_id if self._game_id is not None else 'expert game')
             api.terminate(self._game_id, self._store, description=description)
             self._game_id = None
@@ -143,7 +149,7 @@ class Env:
         return Env._rewards.index(reward)
 
     def get_play_env(self):
-        return Env(True)
+        return Env(True, id_store=IdStore('play'))
 
     def copy(self, store=False):
         game_id = api.copy_game(self._game_id)

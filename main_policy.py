@@ -18,7 +18,7 @@ width = 20
 depth = 8
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env.get_action_meanings())  # Agent can move in many directions
-load_model = True
+load_model = False
 unsupervised = True
 model_path = './model'
 last_id_path = './last_ids'
@@ -27,14 +27,14 @@ use_integrated_server = True
 
 tf.reset_default_graph()
 
-if use_integrated_server:
-    if not os.path.exists(model_path):
-        os.makedirs(model_path)
+if not os.path.exists(model_path):
+    os.makedirs(model_path)
 
 # Startup the server for fun and glory
-# if not start_server():
-#     print('Kill process because server did not start')
-#     sys.exit(1)
+if use_integrated_server:
+    if not start_server():
+        print('Kill process because server did not start')
+        sys.exit(1)
 
 global_episodes = tf.Variable(0, dtype=tf.int32, name='global_episodes', trainable=False)
 trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4, epsilon=0.1, decay=0.99)
