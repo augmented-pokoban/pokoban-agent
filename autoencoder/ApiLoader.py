@@ -22,6 +22,9 @@ class ApiLoader:
             # First retrieval from API
             self._load_next_batch()
 
+        if not any(self._loaded):
+            return None
+
         game = self._loaded.pop()
         return ExpertMoves(api.get_expert_game(game['fileRef']))
 
@@ -47,9 +50,12 @@ class ApiLoader:
         resp = self._api_method(self._last_id, self._batch_size, order='asc')
         self._loaded = resp['data']
         self._total = resp['total']
-        self._last_id = self._loaded[-1]['_id']
-        self._id_store.write_id(self._last_id)  # Write last id to store
         self._has_more = len(self._loaded) == self._batch_size
+
+        if any(self._loaded):
+            self._last_id = self._loaded[-1]['_id']
+            self._id_store.write_id(self._last_id)  # Write last id to store
+
         print('{}: Next batch with skip: {}, id: {}, total: {}'.format(self._name, self._batch_size, self._last_id,
                                                                        self._total))
 

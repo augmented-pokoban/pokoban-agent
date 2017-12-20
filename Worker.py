@@ -151,13 +151,13 @@ class Worker:
                 if len(episode_buffer) is not 0:
                     v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
 
-                if episode_count % 100 == 0 and self.name == 'worker_0':
+                if episode_count % 100 == 0 and self.name == 'worker_0' and episode_count is not 0:
                     print('Saved model')
                     self.save(saver, sess, episode_count)
                     self.play(sess, episode_count)
 
                 # Periodically save model parameters, and summary statistics.
-                if episode_count % 5 == 0:
+                if episode_count % 5 == 0 and episode_count is not 0:
                     if self.name == 'worker_0':
                         print('Episode:', episode_count, 'steps: ', episode_step_count)
 
@@ -184,6 +184,7 @@ class Worker:
                 sys.stdout.flush()
 
             print(self.name, 'completed training in episode', str(episode_count))
+            sys.stdout.flush()
             self.save(saver, sess, episode_count)
 
     def play(self, sess, episode_count, level=None):

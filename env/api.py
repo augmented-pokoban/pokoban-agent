@@ -1,3 +1,4 @@
+import codecs
 import urllib.request
 import urllib.parse
 from io import BytesIO
@@ -49,8 +50,9 @@ def get_replays_list(last_id=None, take=10000, order="desc"):
 
 
 def get_expert_game(file_ref):
+    reader = codecs.getreader('utf-8')
     zip_file = ZipFile(BytesIO(urllib.request.urlopen(file_ref).read()))
-    return json.loads(zip_file.open(zip_file.namelist()[0]).read())
+    return json.loads(reader(zip_file.open(zip_file.namelist()[0])).read())
 
 
 def init(game_file):

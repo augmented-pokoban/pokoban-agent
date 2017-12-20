@@ -22,20 +22,24 @@ load_model = True
 unsupervised = True
 model_path = './model'
 last_id_path = './last_ids'
+num_workers = 20  # multiprocessing.cpu_count()  # Set workers ot number of available CPU threads
+use_integrated_server = True
 
 tf.reset_default_graph()
 
-if not os.path.exists(model_path):
-    os.makedirs(model_path)
+if use_integrated_server:
+    if not os.path.exists(model_path):
+        os.makedirs(model_path)
 
 # Startup the server for fun and glory
-if not start_server():
-    sys.exit(1)
+# if not start_server():
+#     print('Kill process because server did not start')
+#     sys.exit(1)
 
 global_episodes = tf.Variable(0, dtype=tf.int32, name='global_episodes', trainable=False)
 trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4, epsilon=0.1, decay=0.99)
 master_network = Network(height, width, depth, s_size, a_size, 'global', None)  # Generate global network
-num_workers = 20  # multiprocessing.cpu_count()  # Set workers ot number of available CPU threads
+
 
 print('Creating', num_workers, 'workers')
 workers = []

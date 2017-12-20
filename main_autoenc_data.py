@@ -1,4 +1,5 @@
 import datetime
+import os
 from random import shuffle
 
 import env.api as api
@@ -17,15 +18,19 @@ from support import integrated_server
 # convert states
 
 max_list_size = 1024
-max_batches = 1000
+max_batches = 406
 expert_ratio = 0.9
 replay_count = 0
 expert_count = 0
 total = 0
 batch = []
+batch_location = 'batches/'
 expert_loader = ApiLoader(api.get_expert_list, 'Expert')
 replay_loader = ApiLoader(api.get_replays_list, 'Replay')
 integrated_server.start_server()  # running using integrated server
+
+if not os.path.exists(batch_location):
+    os.makedirs(batch_location)
 
 while (expert_loader.has_next() or replay_loader.has_next()) and total < (max_list_size * max_batches):
 
@@ -35,9 +40,16 @@ while (expert_loader.has_next() or replay_loader.has_next()) and total < (max_li
     elif expert_count / total < expert_ratio and expert_loader.has_next():
         game = expert_loader.get_next()
         kind = 'EXPERT'
+    elif not replay_loader.has_next():
+        game = expert_loader.get_next()
+        kind = 'EXPERT'
     else:
         game = replay_loader.get_next()
         kind = 'REPLAY'
+
+    if game is None:
+        print('Game is None for ' + kind)
+        continue
 
     wrapper = MovesWrapper(game)
 
@@ -55,7 +67,7 @@ while (expert_loader.has_next() or replay_loader.has_next()) and total < (max_li
         if total % max_list_size == 0:
             print('Total: {}, Experts: {}, Replays: {} - saving file...'.format(total, expert_count, replay_count))
             shuffle(batch)
-            save_object(batch, 'batches/' + str(datetime.datetime.now()) + '.pkl')
+            save_object(batch, batch_location + str(datetime.datetime.now()) + '.pkl')
             batch = []
 
 print('Terminating with total: {} leaving {} elements processed but not stored.'.format(total, total % max_list_size))
