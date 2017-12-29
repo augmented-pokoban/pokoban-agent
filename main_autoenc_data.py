@@ -18,7 +18,7 @@ from support import integrated_server
 # convert states
 
 max_list_size = 1024
-max_batches = 406
+max_batches = 4000 - 572
 expert_ratio = 0.9
 replay_count = 0
 expert_count = 0
@@ -67,7 +67,8 @@ while (expert_loader.has_next() or replay_loader.has_next()) and total < (max_li
         if total % max_list_size == 0:
             print('Total: {}, Experts: {}, Replays: {} - saving file...'.format(total, expert_count, replay_count))
             shuffle(batch)
-            save_object(batch, batch_location + str(datetime.datetime.now()) + '.pkl')
+
+            save_object(batch, batch_location + str(datetime.datetime.now()).replace(' ', '_').replace(':', '_') + '.pkl')
             batch = []
 
 print('Terminating with total: {} leaving {} elements processed but not stored.'.format(total, total % max_list_size))

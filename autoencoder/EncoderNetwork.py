@@ -9,6 +9,9 @@ class EncoderNetwork:
 
     def __init__(self, height, width, depth, s_size, a_size, r_size, batch_size, scope, trainer):
         with tf.variable_scope(scope):
+            # episode counter
+            self.episodes = tf.Variable(0, dtype=tf.int32, name='global_episodes', trainable=False)
+
             # Input and visual encoding layers
             self.input_image = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
             self.action = tf.placeholder(shape=[None, 1], dtype=tf.int32)
@@ -69,6 +72,8 @@ class EncoderNetwork:
             self.encoding_loss = tf.reduce_mean(tf.squared_difference(self.encoding, self.enc_target))
             self.value_loss = tf.reduce_sum(tf.square(self.value - self.val_target))
 
-            self.loss = self.encoding_loss + self.value_loss
+            self.loss = self.encoding_loss + 0.8 * self.value_loss
+
+            self.rounded_loss = tf.reduce_mean(tf.squared_difference(tf.round(self.encoding), self.enc_target))
 
             self.train_op = trainer.minimize(self.loss)
