@@ -1,6 +1,5 @@
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-import numpy as np
 
 from helper import normalized_columns_initializer
 
@@ -50,7 +49,7 @@ class EncoderNetwork:
 
             # Output layers for encoding and value estimations
             self.encoding = slim.fully_connected(enc_out, s_size,
-                                                 activation_fn=tf.nn.sigmoid,
+                                                 activation_fn=tf.nn.sigmoid, # potentionally chance this activation function
                                                  weights_initializer=normalized_columns_initializer(0.5),
                                                  biases_initializer=None)
 
@@ -68,7 +67,7 @@ class EncoderNetwork:
                                               weights_initializer=normalized_columns_initializer(0.01),
                                               biases_initializer=None)
 
-            # Loss functions
+            # Loss functions - mean squared error
             self.encoding_loss = tf.reduce_mean(tf.squared_difference(self.encoding, self.enc_target))
             self.value_loss = tf.reduce_sum(tf.square(self.value - self.val_target))
 

@@ -175,8 +175,8 @@ class Worker:
                     summary.value.add(tag='Losses/Var Norm', simple_value=float(v_n))
                     summary.value.add(tag='Levels', simple_value=float(total_levels))
                     self.summary_writer.add_summary(summary, episode_count)
-
                     self.summary_writer.flush()
+
                 if self.name == 'worker_0':
                     sess.run(self.increment)
 
