@@ -10,15 +10,15 @@ from Worker import Worker
 from env.Env import Env
 from support.integrated_server import start_server
 
-max_episode_length = 300
-max_buffer_length = 20
+max_episode_length = 150
+max_buffer_length = 30
 gamma = .99  # discount rate for advantage estimation and reward discounting
 height = 20
 width = 20
 depth = 8
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env.get_action_meanings())  # Agent can move in many directions
-load_model = True
+load_model = False
 unsupervised = True
 model_path = './model'
 last_id_path = './last_ids'
