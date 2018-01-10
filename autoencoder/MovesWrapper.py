@@ -13,7 +13,7 @@ class MovesWrapper:
 
         if not any(self.game.transitions):
             return False
-        elif len(self.game.transitions) == self.next_index + 1:
+        elif len(self.game.transitions) == self.next_index:
             return False
         else:
             return True

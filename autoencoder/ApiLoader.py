@@ -1,3 +1,4 @@
+from autoencoder.MovesWrapper import MovesWrapper
 from env import api
 from env.expert_moves import ExpertMoves
 from support.last_id_store import IdStore
@@ -12,12 +13,17 @@ class ApiLoader:
         self._loaded = None
         self._id_store = IdStore(name)
         self._last_id = self._id_store.get_id()
+        self._wrapper = None
 
     def get_next(self):
         """
         Expects that has_next has validated to true beforehand
         :return: ExpertMoves
         """
+
+        if self._wrapper is not None and self._wrapper.has_next():
+            return self._wrapper.get_next()
+
         if self._loaded is None or not any(self._loaded):
             # First retrieval from API
             self._load_next_batch()
@@ -26,9 +32,19 @@ class ApiLoader:
             return None
 
         game = self._loaded.pop()
-        return ExpertMoves(api.get_expert_game(game['fileRef']))
+        game = ExpertMoves(api.get_expert_game(game['fileRef']))
+        self._wrapper = MovesWrapper(game)
+
+        if not self._wrapper.has_next():
+            return self.get_next()
+
+        return self._wrapper.get_next()
 
     def has_next(self):
+
+        if self._wrapper is not None and self._wrapper.has_next():
+            return True
+
         """
         Validates that there exist more data.
         :return: True if get_next() can return another game.
@@ -56,6 +72,6 @@ class ApiLoader:
             self._last_id = self._loaded[-1]['_id']
             self._id_store.write_id(self._last_id)  # Write last id to store
 
-        print('{}: Next batch with skip: {}, id: {}, total: {}'.format(self._name, self._batch_size, self._last_id,
+        print('{}: Next batch with take: {}, id: {}, total: {}'.format(self._name, self._batch_size, self._last_id,
                                                                        self._total))
 

@@ -38,7 +38,7 @@ def get_expert_list(last_id=None, take=1000, order='desc', sort_field='_id'):
     return get_request('pokoban/saves', params)
 
 
-def get_replays_list(last_id=None, take=10000, order="desc"):
+def get_replays_list(last_id=None, take=10000, order="asc"):
     params = dict()
     params['skip'] = 0
     params['limit'] = take

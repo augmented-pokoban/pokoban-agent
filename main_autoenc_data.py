@@ -18,13 +18,13 @@ from support import integrated_server
 # convert states
 
 max_list_size = 1024
-max_batches = 4000 - 572
+max_batches = 2
 expert_ratio = 0.9
 replay_count = 0
 expert_count = 0
 total = 0
 batch = []
-batch_location = 'batches/'
+batch_location = '../batches/'
 expert_loader = ApiLoader(api.get_expert_list, 'Expert')
 replay_loader = ApiLoader(api.get_replays_list, 'Replay')
 integrated_server.start_server()  # running using integrated server
@@ -35,41 +35,35 @@ if not os.path.exists(batch_location):
 while (expert_loader.has_next() or replay_loader.has_next()) and total < (max_list_size * max_batches):
 
     if total == 0 and expert_loader.has_next():
-        game = expert_loader.get_next()
+        state, trans = expert_loader.get_next()
         kind = 'EXPERT'
     elif expert_count / total < expert_ratio and expert_loader.has_next():
-        game = expert_loader.get_next()
+        state, trans = expert_loader.get_next()
         kind = 'EXPERT'
     elif not replay_loader.has_next():
-        game = expert_loader.get_next()
+        state, trans = expert_loader.get_next()
         kind = 'EXPERT'
     else:
-        game = replay_loader.get_next()
+        state, trans = replay_loader.get_next()
         kind = 'REPLAY'
 
-    if game is None:
-        print('Game is None for ' + kind)
-        continue
+    data = EncoderData(state_to_matrix(state, state.dims), Env.map_action(trans.action),
+                       state_to_matrix(trans.state, trans.state.dims), Env.map_reward(trans.reward),
+                       trans.success, trans.done)
 
-    wrapper = MovesWrapper(game)
+    batch.append(data)
+    total += 1
+    if kind == 'EXPERT':
+        expert_count += 1
+    elif kind == 'REPLAY':
+        replay_count += 1
 
-    while wrapper.has_next() and total < (max_list_size * max_batches):
-        state, trans = wrapper.get_next()
-        data = EncoderData(state_to_matrix(state, state.dims), Env.map_action(trans.action),
-                           state_to_matrix(trans.state, trans.state.dims), Env.map_reward(trans.reward))
-        batch.append(data)
-        total += 1
-        if kind == 'EXPERT':
-            expert_count += 1
-        elif kind == 'REPLAY':
-            replay_count += 1
+    if total % max_list_size == 0:
+        print('Total: {}, Experts: {}, Replays: {} - saving file...'.format(total, expert_count, replay_count))
+        shuffle(batch)
 
-        if total % max_list_size == 0:
-            print('Total: {}, Experts: {}, Replays: {} - saving file...'.format(total, expert_count, replay_count))
-            shuffle(batch)
-
-            save_object(batch, batch_location + str(datetime.datetime.now()).replace(' ', '_').replace(':', '_') + '.pkl')
-            batch = []
+        save_object(batch, batch_location + str(datetime.datetime.now()).replace(' ', '_').replace(':', '_') + '.pkl')
+        batch = []
 
 print('Terminating with total: {} leaving {} elements processed but not stored.'.format(total, total % max_list_size))
 

@@ -11,11 +11,13 @@ import helper
 
 
 class EncoderData():
-    def __init__(self, state_x, action, state_y, reward):
+    def __init__(self, state_x, action, state_y, reward, success, done):
         self.state_x = state_x
         self.action = action
         self.state_y = state_y
         self.reward = reward
+        self.success = success
+        self.done = done
 
 
 def save_object(obj, filename):
