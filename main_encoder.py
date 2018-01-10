@@ -61,21 +61,7 @@ with tf.Session() as sess:
         batch = data.get_train()
         x_state, x_action, y_state, y_reward = batch_to_lists(batch, s_size)
 
-        feed_dict = {
-            network.input_image: x_state,
-            network.action: x_action,
-            network.enc_target: y_state,
-            network.reward: y_reward
-        }
-
-        _, enc_loss, val_loss = sess.run(
-            [
-                network.train_op,
-                network.encoding_loss,
-                network.value_loss
-            ],
-            feed_dict=feed_dict
-        )
+        enc_loss, val_loss = network.train(x_state, x_action, y_state, y_reward, sess)
 
         episode_enc_loss.append(enc_loss)
         episode_val_loss.append(val_loss)
@@ -84,22 +70,7 @@ with tf.Session() as sess:
 
             batch = data.get_test()
             x_state, x_action, y_state, y_reward = batch_to_lists(batch, s_size)
-
-            feed_dict = {
-                network.input_image: x_state,
-                network.action: x_action,
-                network.enc_target: y_state,
-                network.reward: y_reward
-            }
-
-            test_enc_loss, test_val_loss, test_rounded_loss = sess.run(
-                [
-                    network.encoding_loss,
-                    network.value_loss,
-                    network.rounded_loss
-                ],
-                feed_dict=feed_dict
-            )
+            test_enc_loss, test_val_loss, test_rounded_loss = network.test(x_state, x_action, y_state, y_reward, sess)
 
             mean_enc_loss = np.mean(episode_enc_loss[-5:])
             mean_val_loss = np.mean(episode_val_loss[-5:])

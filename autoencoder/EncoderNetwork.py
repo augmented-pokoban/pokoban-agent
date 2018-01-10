@@ -67,12 +67,66 @@ class EncoderNetwork:
                                               weights_initializer=normalized_columns_initializer(0.01),
                                               biases_initializer=None)
 
+            self.encoding_rounded = tf.round(self.encoding)
+
             # Loss functions - mean squared error
             self.encoding_loss = tf.reduce_mean(tf.squared_difference(self.encoding, self.enc_target))
             self.value_loss = tf.reduce_sum(tf.square(self.value - self.val_target))
 
             self.loss = self.encoding_loss + 0.8 * self.value_loss
 
-            self.rounded_loss = tf.reduce_mean(tf.squared_difference(tf.round(self.encoding), self.enc_target))
+            self.rounded_loss = tf.reduce_mean(tf.squared_difference(self.encoding_rounded, self.enc_target))
 
             self.train_op = trainer.minimize(self.loss)
+
+    def train(self, x_state, x_action, y_state, y_reward, sess):
+        feed_dict = {
+            self.input_image: x_state,
+            self.action: x_action,
+            self.enc_target: y_state,
+            self.reward: y_reward
+        }
+
+        _, enc_loss, val_loss = sess.run(
+            [
+                self.train_op,
+                self.encoding_loss,
+                self.value_loss
+            ],
+            feed_dict=feed_dict
+        )
+
+        return enc_loss, val_loss
+
+    def test(self, x_state, x_action, y_state, y_reward, sess):
+        feed_dict = {
+            self.input_image: x_state,
+            self.action: x_action,
+            self.enc_target: y_state,
+            self.reward: y_reward
+        }
+
+        test_enc_loss, test_val_loss, test_rounded_loss = sess.run(
+            [
+                self.encoding_loss,
+                self.value_loss,
+                self.rounded_loss
+            ],
+            feed_dict=feed_dict
+        )
+
+        return test_enc_loss, test_val_loss, test_rounded_loss
+
+    def eval(self, x_state, x_action, sess):
+
+        feed_dict = {
+            self.input_image: x_state,
+            self.action: x_action
+        }
+
+        val, y = sess.run([self.value, self.encoding_rounded], feed_dict=feed_dict)
+
+        return val, y
+
+
+

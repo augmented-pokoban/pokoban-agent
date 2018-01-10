@@ -42,6 +42,7 @@ def matrix_to_state(matrix, dimensions):
     state['agents'] = []
     state['walls'] = []
     state['goals'] = []
+    state['dimensions'] = dimensions
 
     def map_type(x):
         return {
@@ -62,4 +63,4 @@ def matrix_to_state(matrix, dimensions):
                     (key, letter) = map_type(field_type)
                     state[key].append({'row': row, 'col': col, 'letter': letter})
 
-    return State(state)
+    return state

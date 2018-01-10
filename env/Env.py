@@ -121,7 +121,7 @@ class Env:
             response = api.get_unsupervised_map_list(self._last_id, take)
             maps = list(map(lambda level: level['relativePath'], response['data']))
         else:
-            response = api.get_expert_list(self._last_id, take=take)
+            response = api.get_expert_list(self._last_id, take=take, order='asc')
             maps = list(map(lambda expert_games: expert_games['fileRef'], response['data']))
 
         self._last_id = response['data'][-1]['_id']

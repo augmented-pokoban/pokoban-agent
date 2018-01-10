@@ -25,11 +25,12 @@ def get_unsupervised_map_list(last_id=None, take=10000):
     return get_request('levels/unsupervised', params)
 
 
-def get_expert_list(last_id=None, take=10000, order='desc'):
+def get_expert_list(last_id=None, take=1000, order='desc', sort_field='_id'):
     params = dict()
     params['skip'] = 0
     params['limit'] = take
     params['order'] = order
+    params['sort_field'] = sort_field
 
     if last_id is not None:
         params['last_id'] = last_id
@@ -78,6 +79,10 @@ def terminate(game_id, store=False, description='', is_planner=False):
     delete_request('pokoban/' + game_id, url_params)
 
 
+def post_encoding(data):
+    post_request('encoding', json.dumps(data).encode('utf8'))
+
+
 class RequestWithMethod(urllib.request.Request):
     def __init__(self, *args, **kwargs):
         self._method = kwargs.pop('method', None)
@@ -111,9 +116,10 @@ def delete_request(url, url_params):
     opener.open(request)
 
 
-def post_request(url):
+def post_request(url, data=None):
     opener = urllib.request.build_opener(urllib.request.HTTPHandler)
-    request = RequestWithMethod(url=base_url + url, method='POST', data=None)
+    request = RequestWithMethod(url=base_url + url, method='POST', data=data)
+    request.add_header('Content-Type', 'application/json')
     with opener.open(request) as response:
         data = response.read()
         encoding = response.info().get_content_charset('utf-8')

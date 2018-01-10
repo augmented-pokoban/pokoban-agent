@@ -26,6 +26,9 @@ def process_frame(s, s_size):
     return img_gray
 
 
+def reshape_back(s, height, width, depth):
+    return np.reshape(s, [height, width, depth])
+
 # Discounting function used to calculate discounted returns.
 def discount(x, gamma):
     rewards = np.empty(len(x))
