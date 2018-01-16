@@ -39,7 +39,7 @@ class EncoderNetwork:
 
             self.conv2 = slim.conv2d(activation_fn=tf.nn.elu,
                                      inputs=self.conv1, num_outputs=32,
-                                     kernel_size=[3, 3], stride=[2, 2], padding='VALID')
+                                     kernel_size=[3, 3], stride=[1, 1], padding='VALID')
 
             enc_out = slim.fully_connected(
                 slim.flatten(self.conv2),
@@ -54,14 +54,20 @@ class EncoderNetwork:
                                                  biases_initializer=None)
 
             # value = reward
-            # self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
-            #                          inputs=self.conv2, num_outputs=32,
-            #                          kernel_size=[1, 1], stride=[1, 1], padding='VALID')
+            self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
+                                     inputs=self.conv2, num_outputs=32,
+                                     kernel_size=[1, 1], stride=[1, 1], padding='VALID')
+            val_out = slim.fully_connected(
+                slim.flatten(self.conv3),
+                512,
+                activation_fn=tf.nn.elu
+            )
+
             # self.conv4 = slim.conv2d(activation_fn=tf.nn.elu,
             #                          inputs=self.conv3, num_outputs=32,
             #                          kernel_size=[1, 1], stride=[1, 1], padding='VALID')
 
-            self.value = slim.fully_connected(enc_out,
+            self.value = slim.fully_connected(val_out,
                                               r_size,
                                               activation_fn=tf.nn.softmax,
                                               weights_initializer=normalized_columns_initializer(0.01),
