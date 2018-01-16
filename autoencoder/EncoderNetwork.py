@@ -34,7 +34,7 @@ class EncoderNetwork:
             self.input_tile = tf.concat([self.imageIn, actions_tile], axis=-1)
 
             self.conv1 = slim.conv2d(activation_fn=tf.nn.elu,
-                                     inputs=self.input_tile, num_outputs=16,
+                                     inputs=self.input_tile, num_outputs=64,
                                      kernel_size=[3, 3], stride=[1, 1], padding='VALID')
 
             self.conv2 = slim.conv2d(activation_fn=tf.nn.elu,

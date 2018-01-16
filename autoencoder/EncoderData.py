@@ -68,7 +68,7 @@ class DataLoader():
         if self._cur_train is None or not any(self._cur_train):
             self._cur_train = self._load_batches(self._train, 'TRAIN')
 
-        return self._cur_train.pop()
+        return self._cur_train.pop() if self._cur_train is not None else None
 
     def get_test(self):
         if self._cur_test is None or not any(self._cur_test):
@@ -85,12 +85,14 @@ class DataLoader():
 
         if data_set_name is 'TEST':
             next_file = random.choice(file_set)
+        elif not any(file_set):
+            return None
         else:
             next_file = file_set.pop()
 
         print(next_file)
 
-        data_set = load_object('zipped/' + next_file)
+        data_set = load_object('../batches/' + next_file)
 
         batch = []
         counter = 0

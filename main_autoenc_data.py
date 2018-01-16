@@ -18,7 +18,7 @@ from support import integrated_server
 # convert states
 
 max_list_size = 1024
-max_batches = 2
+max_batches = 4000
 expert_ratio = 0.9
 replay_count = 0
 expert_count = 0

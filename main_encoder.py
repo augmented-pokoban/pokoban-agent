@@ -20,7 +20,7 @@ r_size = len(Env.get_reward_meanings())  # number of different types of rewards 
 # 1 = -0.1
 # 2 = 1
 # 3 = 10
-load_model = True
+load_model = False
 model_path = './enc_model'
 metadata_file = 'data.csv'
 
@@ -59,6 +59,13 @@ with tf.Session() as sess:
 
         # get data
         batch = data.get_train()
+
+        if batch is None:
+            data = DataLoader(metadata_file, batch_size, skip_train_sets)
+            print('Epoch completed, restarting training at episode {}'.format(episode))
+            saver.save(sess, model_path + '/model-' + str(episode) + '.cptk')
+            continue
+
         x_state, x_action, y_state, y_reward = batch_to_lists(batch, s_size)
 
         enc_loss, val_loss = network.train(x_state, x_action, y_state, y_reward, sess)
@@ -84,7 +91,6 @@ with tf.Session() as sess:
             summary_writer.flush()
 
             if episode % 100 == 0:
-                saver.save(sess, model_path + '/model-' + str(episode) + '.cptk')
                 print(
                     'Episodes: {}, Encoding loss: {}, Encoding rounded loss: {}, Value loss: {}, Test encoding loss: {}, Test value loss: {}'
                     .format(episode, episode_enc_loss[-1], test_rounded_loss, episode_val_loss[-1], test_enc_loss,

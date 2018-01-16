@@ -14,7 +14,7 @@ class Network():
             self.imageIn = tf.reshape(self.inputs, shape=[-1, height, width, depth])
 
             self.conv1 = slim.conv2d(activation_fn=tf.nn.elu,
-                                     inputs=self.imageIn, num_outputs=16,
+                                     inputs=self.imageIn, num_outputs=64,
                                      kernel_size=[3, 3], stride=[1, 1], padding='VALID')
 
             self.conv2 = slim.conv2d(activation_fn=tf.nn.elu,
@@ -70,7 +70,7 @@ class Network():
                 # Loss functions
                 self.value_loss = tf.reduce_sum(tf.square(self.target_v - tf.reshape(self.value, [-1])))
                 self.policy_loss = -tf.reduce_sum(tf.log(self.responsible_outputs + 1e-10) * self.advantages)
-                self.loss = 0.5 * self.value_loss + self.policy_loss - self.entropy * 0.01
+                self.loss = self.value_loss + self.policy_loss - self.entropy * 0.01
 
                 # Get gradients from local network using local losses
                 local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)

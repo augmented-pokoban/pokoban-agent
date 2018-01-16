@@ -7,7 +7,7 @@ from env.Env import Env
 from env import api
 from env.mapper import state_to_matrix
 
-batch_location = 'batches/'
+batch_location = '../batches/'
 expert_loader = ApiLoader(api.get_expert_list, 'Expert')
 replay_loader = ApiLoader(api.get_replays_list, 'Replay')
 

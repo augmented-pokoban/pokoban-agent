@@ -1,7 +1,7 @@
 #!/bin/sh
 # embedded options to qsub - start with #PBS
 # -- Name of the job ---
-#PBS -N 1Autoenc_data
+#PBS -N enc_data
 # –- specify queue --
 #PBS -q hpc
 # -- estimated wall clock time (execution time): hh:mm:ss --

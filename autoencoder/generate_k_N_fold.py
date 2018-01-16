@@ -2,7 +2,7 @@ import os
 import csv
 from random import shuffle
 
-files = os.listdir('zipped')
+files = os.listdir('../batches')
 K = 10
 n = len(files)
 shuffle(files)

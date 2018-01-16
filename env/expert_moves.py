@@ -28,11 +28,12 @@ class State:
 class Transition:
 
     def __init__(self, transition):
-        self.reward = transition['reward']
         self.done = transition['done']
-        self.success = 10.0 if self.done else transition['success']
+        self.success = transition['success']
+        self.reward = 10.0 if self.done else transition['reward']
         self.action = transition['action']
         self.state = State(transition['state'])
+
 
 
 class PokobanObject:
