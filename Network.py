@@ -25,7 +25,7 @@ class Network():
             #                          inputs=self.conv2, num_outputs=32,
             #                          kernel_size=[2, 2], stride=[1, 1], padding='VALID')
 
-            hidden = slim.fully_connected(slim.flatten(self.conv2), 512, activation_fn=tf.nn.elu)
+            hidden = slim.fully_connected(slim.flatten(self.conv2), 256, activation_fn=tf.nn.elu)
 
             # Recurrent network for temporal dependencies
             lstm_cell = tf.contrib.rnn.BasicLSTMCell(256, state_is_tuple=True)

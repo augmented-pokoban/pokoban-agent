@@ -59,7 +59,7 @@ class EncoderNetwork:
                                      kernel_size=[1, 1], stride=[1, 1], padding='VALID')
 
             self.conv4 = slim.conv2d(activation_fn=tf.nn.elu,
-                                     inputs=self.conv3, num_outputs=32,
+                                     inputs=self.conv3, num_outputs=16,
                                      kernel_size=[1, 1], stride=[1, 1], padding='VALID')
 
             val_out = slim.fully_connected(
@@ -82,7 +82,7 @@ class EncoderNetwork:
 
             self.value_loss = tf.reduce_mean(tf.square(self.value - self.val_target))
 
-            self.loss = self.encoding_loss + 0.5 * self.value_loss
+            self.loss = self.encoding_loss + self.value_loss
 
             self.rounded_loss = tf.reduce_mean(tf.squared_difference(self.encoding_rounded, self.enc_target))
 
