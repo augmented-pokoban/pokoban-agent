@@ -82,7 +82,7 @@ class EncoderNetwork:
 
             self.value_loss = tf.reduce_mean(tf.square(self.value - self.val_target))
 
-            self.loss = self.encoding_loss + self.value_loss
+            self.loss = self.encoding_loss + 0.5 * self.value_loss
 
             self.rounded_loss = tf.reduce_mean(tf.squared_difference(self.encoding_rounded, self.enc_target))
 
