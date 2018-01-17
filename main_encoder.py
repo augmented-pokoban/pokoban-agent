@@ -62,7 +62,7 @@ with tf.Session() as sess:
         batch = data.get_train()
 
         if batch is None:
-            data = DataLoader(metadata_file, batch_size, skip_train_sets)
+            data = DataLoader(metadata_file, batch_size, batch_path, skip_train_sets)
             print('Epoch completed, restarting training at episode {}'.format(episode))
             saver.save(sess, model_path + '/model-' + str(episode) + '.cptk')
             continue

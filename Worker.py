@@ -62,7 +62,7 @@ class Worker:
                      self.local_AC.advantages: advantages,
                      self.local_AC.state_in[0]: self.batch_rnn_state[0],
                      self.local_AC.state_in[1]: self.batch_rnn_state[1]}
-        v_l, p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run([#self.local_AC.value_loss,
+        p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run([#self.local_AC.value_loss,
                                                                      self.local_AC.policy_loss,
                                                                      self.local_AC.entropy,
                                                                      self.local_AC.grad_norms,
@@ -70,7 +70,7 @@ class Worker:
                                                                      self.local_AC.state_out,
                                                                      self.local_AC.apply_grads],
                                                                     feed_dict=feed_dict)
-        return v_l / len(rollout), p_l / len(rollout), e_l / len(rollout), g_n, v_n
+        return p_l / len(rollout), e_l / len(rollout), g_n, v_n
 
     def work(self, max_episode_length, gamma, sess, coord, saver, max_buffer_length):
         episode_count = sess.run(self.global_episodes)
@@ -143,7 +143,7 @@ class Worker:
                         # value estimation.
                         v1 = self.value_fn(sess, s, rnn_state)
                         # Train here
-                        v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, v1)
+                        p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, v1)
                         episode_buffer = []
                         sess.run(self.update_local_ops)
 
@@ -153,7 +153,7 @@ class Worker:
 
                 # Update the network using the episode buffer at the end of the episode.
                 if len(episode_buffer) is not 0:
-                    v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
+                    p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
 
                 if episode_count % 100 == 0 and self.name == 'worker_0' and episode_count is not 0:
                     print('Saved model')
@@ -172,7 +172,6 @@ class Worker:
                     summary.value.add(tag='Perf/Reward', simple_value=float(mean_reward))
                     summary.value.add(tag='Perf/Length', simple_value=float(mean_length))
                     summary.value.add(tag='Perf/Value', simple_value=float(mean_value))
-                    summary.value.add(tag='Losses/Value Loss', simple_value=float(v_l))
                     summary.value.add(tag='Losses/Policy Loss', simple_value=float(p_l))
                     summary.value.add(tag='Losses/Entropy', simple_value=float(e_l))
                     summary.value.add(tag='Losses/Grad Norm', simple_value=float(g_n))
@@ -238,7 +237,7 @@ class Worker:
         if deterministic:
             a = np.argmax(a_dist)
         else:
-            a = np.random.choice(self.actions, p=a_dist[0])
+            a = np.random.choice(self.actions)
 
         return a, v, rnn_state
 
