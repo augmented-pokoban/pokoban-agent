@@ -48,21 +48,21 @@ class Worker:
         # Here we take the rewards and values from the rollout, and use them to
         # generate the advantage and discounted returns.
         # The advantage function uses "Generalized Advantage Estimation"
-        self.rewards_plus = np.asarray(rewards.tolist() + [bootstrap_value])
-        discounted_rewards = discount(self.rewards_plus, gamma)[:-1]
+        #self.rewards_plus = np.asarray(rewards.tolist() + [bootstrap_value])
+        #discounted_rewards = discount(self.rewards_plus, gamma)[:-1]
         self.value_plus = np.asarray(values.tolist() + [bootstrap_value])
         advantages = rewards + gamma * self.value_plus[1:] - self.value_plus[:-1]
         advantages = discount(advantages, gamma)
 
         # Update the global network using gradients from loss
         # Generate network statistics to periodically save
-        feed_dict = {self.local_AC.target_v: discounted_rewards,
+        feed_dict = {#self.local_AC.target_v: discounted_rewards,
                      self.local_AC.inputs: np.vstack(observations),
                      self.local_AC.actions: actions,
                      self.local_AC.advantages: advantages,
                      self.local_AC.state_in[0]: self.batch_rnn_state[0],
                      self.local_AC.state_in[1]: self.batch_rnn_state[1]}
-        v_l, p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run([self.local_AC.value_loss,
+        v_l, p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run([#self.local_AC.value_loss,
                                                                      self.local_AC.policy_loss,
                                                                      self.local_AC.entropy,
                                                                      self.local_AC.grad_norms,

@@ -19,7 +19,7 @@ class Network():
 
             self.conv2 = slim.conv2d(activation_fn=tf.nn.elu,
                                      inputs=self.conv1, num_outputs=32,
-                                     kernel_size=[3, 3], stride=[2, 2], padding='VALID')
+                                     kernel_size=[3, 3], stride=[1, 1], padding='VALID')
 
             # self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
             #                          inputs=self.conv2, num_outputs=32,
@@ -59,18 +59,19 @@ class Network():
             if scope != 'global':
                 self.actions = tf.placeholder(shape=[None], dtype=tf.int32)
                 self.actions_onehot = tf.one_hot(self.actions, a_size, dtype=tf.float32)
-                self.target_v = tf.placeholder(shape=[None], dtype=tf.float32)
+                #self.target_v = tf.placeholder(shape=[None], dtype=tf.float32)
                 self.advantages = tf.placeholder(shape=[None], dtype=tf.float32)
 
                 self.responsible_outputs = tf.reduce_sum(self.policy * self.actions_onehot, [1])
 
                 # Entropy function
-                self.entropy = - tf.reduce_sum(self.policy * tf.log(tf.clip_by_value(self.policy, 1e-10, 1)))
+                self.entropy = tf.reduce_sum(self.policy * tf.log(tf.clip_by_value(self.policy, 1e-15, 1)))
 
                 # Loss functions
-                self.value_loss = tf.reduce_sum(tf.square(self.target_v - tf.reshape(self.value, [-1])))
-                self.policy_loss = -tf.reduce_sum(tf.log(self.responsible_outputs + 1e-10) * self.advantages)
-                self.loss = self.value_loss + self.policy_loss - self.entropy * 0.01
+                #self.value_loss = tf.reduce_sum(tf.square(self.target_v - tf.reshape(self.value, [-1])))
+                self.policy_loss = tf.reduce_sum(tf.log(self.responsible_outputs + 1e-15) * self.advantages)
+                #self.loss = self.value_loss + self.policy_loss - self.entropy * 0.01
+                self.loss = self.policy_loss + self.entropy * 0.01
 
                 # Get gradients from local network using local losses
                 local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)

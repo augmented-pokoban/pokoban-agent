@@ -57,27 +57,28 @@ class EncoderNetwork:
             self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
                                      inputs=self.conv2, num_outputs=32,
                                      kernel_size=[1, 1], stride=[1, 1], padding='VALID')
+
+            self.conv4 = slim.conv2d(activation_fn=tf.nn.elu,
+                                     inputs=self.conv3, num_outputs=32,
+                                     kernel_size=[1, 1], stride=[1, 1], padding='VALID')
+
             val_out = slim.fully_connected(
-                slim.flatten(self.conv3),
+                slim.flatten(self.conv4),
                 512,
                 activation_fn=tf.nn.elu
             )
 
-            # self.conv4 = slim.conv2d(activation_fn=tf.nn.elu,
-            #                          inputs=self.conv3, num_outputs=32,
-            #                          kernel_size=[1, 1], stride=[1, 1], padding='VALID')
-
             self.value = slim.fully_connected(val_out,
-                                              r_size,
-                                              activation_fn=tf.nn.softmax,
-                                              weights_initializer=normalized_columns_initializer(0.01),
+                                              1,
+                                              activation_fn=None,
+                                              weights_initializer=normalized_columns_initializer(1.0),
                                               biases_initializer=None)
 
             self.encoding_rounded = tf.round(self.encoding)
 
             # Loss functions - mean squared error
             self.encoding_loss = tf.reduce_mean(tf.squared_difference(self.encoding, self.enc_target))
-            self.value_loss = tf.reduce_sum(tf.square(self.value - self.val_target))
+            self.value_loss = tf.reduce_mean(tf.square(self.value - self.val_target))
 
             self.loss = self.encoding_loss + 0.8 * self.value_loss
 
