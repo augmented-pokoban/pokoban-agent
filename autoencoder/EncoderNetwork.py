@@ -5,8 +5,7 @@ from helper import normalized_columns_initializer
 
 
 class EncoderNetwork:
-
-    def __init__(self, height, width, depth, s_size, a_size, r_size, batch_size, scope, trainer):
+    def __init__(self, height, width, depth, s_size, a_size, r_size, f_size, batch_size, scope, trainer):
         with tf.variable_scope(scope):
             # episode counter
             self.episodes = tf.Variable(0, dtype=tf.int32, name='global_episodes', trainable=False)
@@ -48,10 +47,22 @@ class EncoderNetwork:
             )
 
             # Output layers for encoding and value estimations
-            self.encoding = slim.fully_connected(enc_out, s_size,
-                                                 activation_fn=tf.nn.sigmoid, # potentionally chance this activation function
-                                                 weights_initializer=normalized_columns_initializer(0.5),
-                                                 biases_initializer=None)
+            # self.enc_fc = slim.fully_connected(enc_out, s_size * f_size,
+            #                                    activation_fn=None,
+            #                                    weights_initializer=normalized_columns_initializer(0.5),
+            #                                    biases_initializer=None)
+            #
+            # self.enc_reshape = tf.reshape(self.enc_fc, shape=[-1, width, height, f_size])
+            # self.encoding = tf.reshape(tf.cast(tf.argmax(tf.nn.softmax(self.enc_reshape, dim=-1), axis=-1), tf.float32),
+            #                            shape=[-1, s_size])
+
+            self.enc_fc = slim.fully_connected(enc_out, s_size,
+                                               activation_fn=tf.nn.elu,
+                                               weights_initializer=normalized_columns_initializer(0.5),
+                                               biases_initializer=None)
+
+            self.encoding = tf.clip_by_value(self.enc_fc, 0, 6)
+            self.encoding_rounded = tf.round(self.encoding)
 
             # value = reward
             self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
@@ -74,17 +85,14 @@ class EncoderNetwork:
                                               weights_initializer=normalized_columns_initializer(1.0),
                                               biases_initializer=None)
 
-            self.encoding_rounded = tf.round(self.encoding)
-
             # Loss functions - mean squared error
             self.encoding_loss = tf.reduce_mean(tf.squared_difference(self.encoding, self.enc_target))
             self.value_loss = tf.reduce_mean(tf.squared_difference(self.value, self.val_target))
 
             self.value_loss = tf.reduce_mean(tf.square(self.value - self.val_target))
+            self.encoding_loss_rounded = tf.reduce_mean(tf.squared_difference(self.encoding_rounded, self.enc_target))
 
-            self.loss = self.encoding_loss + self.value_loss
-
-            self.rounded_loss = tf.reduce_mean(tf.squared_difference(self.encoding_rounded, self.enc_target))
+            self.loss = self.encoding_loss  + self.value_loss
 
             self.train_op = trainer.minimize(self.loss)
 
@@ -96,16 +104,17 @@ class EncoderNetwork:
             self.reward: y_reward
         }
 
-        _, enc_loss, val_loss = sess.run(
+        _, enc_loss, val_loss, enc_loss_rounded = sess.run(
             [
                 self.train_op,
                 self.encoding_loss,
-                self.value_loss
+                self.value_loss,
+                self.encoding_loss_rounded
             ],
             feed_dict=feed_dict
         )
 
-        return enc_loss, val_loss
+        return enc_loss, val_loss, enc_loss_rounded
 
     def test(self, x_state, x_action, y_state, y_reward, sess):
         feed_dict = {
@@ -115,27 +124,22 @@ class EncoderNetwork:
             self.reward: y_reward
         }
 
-        test_enc_loss, test_val_loss, test_rounded_loss = sess.run(
+        test_enc_loss, test_val_loss = sess.run(
             [
                 self.encoding_loss,
-                self.value_loss,
-                self.rounded_loss
+                self.value_loss
             ],
             feed_dict=feed_dict
         )
 
-        return test_enc_loss, test_val_loss, test_rounded_loss
+        return test_enc_loss, test_val_loss
 
     def eval(self, x_state, x_action, sess):
-
         feed_dict = {
             self.input_image: x_state,
             self.action: x_action
         }
 
-        val, y = sess.run([self.value, self.encoding_rounded], feed_dict=feed_dict)
+        val, y = sess.run([self.value, self.encoding], feed_dict=feed_dict)
 
         return val, y
-
-
-

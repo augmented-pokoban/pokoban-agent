@@ -1,6 +1,6 @@
 import numpy as np
-
 import env.MatrixIndex as INDEX
+import env.NewMatrixIndex as NEW_INDEX
 from env.expert_moves import State
 
 
@@ -36,6 +36,58 @@ def state_to_matrix(state, dimensions):
     return matrix
 
 
+def new_state_to_matrix(state, dimensions):
+    matrix = np.zeros((dimensions, dimensions))
+
+    for wall in state.walls:
+        matrix[wall.row, wall.col] = NEW_INDEX.Wall
+
+    for agent in state.agents:
+        matrix[agent.row, agent.col] = NEW_INDEX.Agent
+
+    for box in state.boxes:
+        matrix[box.row, box.col] = NEW_INDEX.BoxA
+
+    for goal in state.goals:
+        if matrix[goal.row, goal.col] is NEW_INDEX.Agent:
+            matrix[goal.row, goal.col] = NEW_INDEX.AgentAtGoalA
+        elif matrix[goal.row, goal.col] is NEW_INDEX.BoxA:
+            matrix[goal.row, goal.col] = NEW_INDEX.BoxAAtGoalA
+        else:
+            matrix[goal.row, goal.col] = NEW_INDEX.GoalA
+
+    return matrix
+
+
+def new_matrix_to_state(matrix, dimensions):
+    state = dict()
+    state['boxes'] = []
+    state['agents'] = []
+    state['walls'] = []
+    state['goals'] = []
+    state['dimensions'] = dimensions
+
+    def map_type(x):
+        return {
+            NEW_INDEX.Wall: [('walls', '+')],
+            NEW_INDEX.Agent: [('agents', '0')],
+            NEW_INDEX.BoxA: [('boxes', 'A')],
+            NEW_INDEX.GoalA: [('goals', 'a')],
+            NEW_INDEX.AgentAtGoalA: [('agents', '0'), ('goals', 'a')],
+            NEW_INDEX.BoxAAtGoalA: [('boxes', 'A'), ('goals', 'a')]
+        }[x]
+
+    for row in range(dimensions):
+        for col in range(dimensions):
+            dicts = map_type(matrix[row, col])
+
+            for field_type in dicts:
+                (key, letter) = field_type
+                state[key].append({'row': row, 'col': col, 'letter': letter})
+
+    return state
+
+
 def matrix_to_state(matrix, dimensions):
     state = dict()
     state['boxes'] = []
@@ -64,3 +116,8 @@ def matrix_to_state(matrix, dimensions):
                     state[key].append({'row': row, 'col': col, 'letter': letter})
 
     return state
+
+
+def old_matrix_to_new_matrix(matrix, dimensions):
+    state = State(matrix_to_state(matrix, dimensions))
+    return new_state_to_matrix(state, dimensions)

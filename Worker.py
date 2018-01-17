@@ -123,8 +123,10 @@ class Worker:
                         sys.exit()
 
                     if done:
-                        print('Episode: {} Steps: {} Worker: {} - Done: True'.format(episode_count, episode_step_count,
-                                                                                     self.name))
+                        print('Episode: {} Steps: {} Worker: {} Reward: {} : COMPLETED'.format(episode_count,
+                                                                                               episode_step_count,
+                                                                                               self.name,
+                                                                                               r))
 
                     # Update values, states, total amount of steps, etc
                     episode_buffer.append([s, a, r, s1, done, v])

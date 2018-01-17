@@ -8,6 +8,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import numpy as np
 
 import helper
+from env.mapper import old_matrix_to_new_matrix
 
 
 class EncoderData():
@@ -38,10 +39,10 @@ def load_object(filename):
 
 def batch_to_lists(batch, s_size):
     x_state = np.array(
-        list(map(lambda encoded_data: helper.process_frame(encoded_data.state_x, s_size), batch)))  # image biartch
+        list(map(lambda encoded_data: helper.process_frame(old_matrix_to_new_matrix(encoded_data.state_x,20), s_size), batch)))  # image biartch
     x_action = np.array(list(map(lambda encoded_data: [encoded_data.action], batch)))  # action batch
     y_state = np.array(
-        list(map(lambda encoded_data: helper.process_frame(encoded_data.state_y, s_size), batch)))  # target state batch
+        list(map(lambda encoded_data: helper.process_frame(old_matrix_to_new_matrix(encoded_data.state_y,20), s_size), batch)))  # target state batch
     y_reward = np.array(list(map(lambda encoded_data: encoded_data.reward if not encoded_data.done else 3, batch)))  # target reward batch
 
     return x_state, x_action, y_state, y_reward
