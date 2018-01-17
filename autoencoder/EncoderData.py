@@ -42,19 +42,20 @@ def batch_to_lists(batch, s_size):
     x_action = np.array(list(map(lambda encoded_data: [encoded_data.action], batch)))  # action batch
     y_state = np.array(
         list(map(lambda encoded_data: helper.process_frame(encoded_data.state_y, s_size), batch)))  # target state batch
-    y_reward = np.array(list(map(lambda encoded_data: [encoded_data.reward], batch)))  # target reward batch
+    y_reward = np.array(list(map(lambda encoded_data: encoded_data.reward if not encoded_data.done else 3, batch)))  # target reward batch
 
     return x_state, x_action, y_state, y_reward
 
 
 class DataLoader():
 
-    def __init__(self, metadata_file, batch_size, skip_train=0):
+    def __init__(self, metadata_file, batch_size, batch_path, skip_train=0):
         # Load csv file
         # Assign files to train, test and validation
         self._cur_train = None
         self._cur_test = None
         self._batch_size = batch_size
+        self._batch_path = batch_path
 
         with open(metadata_file, 'r') as f:
             reader = csv.DictReader(f)
@@ -92,7 +93,7 @@ class DataLoader():
 
         print(next_file)
 
-        data_set = load_object('../batches/' + next_file)
+        data_set = load_object(self._batch_path + next_file)
 
         batch = []
         counter = 0

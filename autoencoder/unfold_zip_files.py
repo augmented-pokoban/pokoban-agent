@@ -1,7 +1,7 @@
 import os
 from zipfile import ZipFile, ZIP_DEFLATED
 
-path = 'zipped/'
+path = 'batches/'
 
 files = filter(lambda f: '2017-12-23_17_34_32.066026.zip' in f, os.listdir(path))
 

@@ -1,13 +1,13 @@
 from autoencoder.EncoderData import DataLoader, batch_to_lists
 from autoencoder.EncoderNetwork import EncoderNetwork
 from env import api
-from env.Env import Env, matrix_to_state
+from env.Env import Env, matrix_to_state, State
 import tensorflow as tf
 import numpy as np
 
 from helper import reshape_back
 
-batch_size = 1
+batch_size = 100
 height = 20
 width = 20
 depth = 8
@@ -28,7 +28,6 @@ with tf.Session() as sess:
     ckpt = tf.train.get_checkpoint_state(model_path)
     saver.restore(sess, ckpt.model_checkpoint_path)
 
-    # TODO: Select file to test encoding on
     x_state, x_action, exp_state, exp_reward = batch_to_lists(data.get_train(), s_size)
     y_reward, y_state = network.eval(x_state, x_action, sess)
     diff = np.absolute(exp_state - y_state)

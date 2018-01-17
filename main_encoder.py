@@ -22,6 +22,7 @@ r_size = len(Env.get_reward_meanings())  # number of different types of rewards 
 # 3 = 10
 load_model = False
 model_path = './enc_model'
+batch_path = '../batches/'
 metadata_file = 'data.csv'
 
 tf.reset_default_graph()
@@ -34,7 +35,7 @@ network = EncoderNetwork(height, width, depth, s_size, a_size, r_size, batch_siz
 increment = network.episodes.assign_add(1)
 
 saver = tf.train.Saver(max_to_keep=5)
-data = DataLoader(metadata_file, batch_size, skip_train_sets)
+data = DataLoader(metadata_file, batch_size, batch_path, skip_train_sets)
 
 with tf.Session() as sess:
     if load_model:
@@ -69,7 +70,6 @@ with tf.Session() as sess:
         x_state, x_action, y_state, y_reward = batch_to_lists(batch, s_size)
 
         enc_loss, val_loss = network.train(x_state, x_action, y_state, y_reward, sess)
-
         episode_enc_loss.append(enc_loss)
         episode_val_loss.append(val_loss)
 

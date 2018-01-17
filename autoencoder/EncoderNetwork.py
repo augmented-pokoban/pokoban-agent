@@ -15,7 +15,7 @@ class EncoderNetwork:
             self.input_image = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
             self.action = tf.placeholder(shape=[None, 1], dtype=tf.int32)
             self.enc_target = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
-            self.reward = tf.placeholder(shape=[None, 1], dtype=tf.int32)
+            self.reward = tf.placeholder(shape=[None], dtype=tf.int32)
 
             # one-hot action vector
 
@@ -43,7 +43,7 @@ class EncoderNetwork:
 
             enc_out = slim.fully_connected(
                 slim.flatten(self.conv2),
-                256,
+                512,
                 activation_fn=tf.nn.elu
             )
 
@@ -57,6 +57,7 @@ class EncoderNetwork:
             self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
                                      inputs=self.conv2, num_outputs=32,
                                      kernel_size=[1, 1], stride=[1, 1], padding='VALID')
+
             val_out = slim.fully_connected(
                 slim.flatten(self.conv3),
                 512,
@@ -77,9 +78,9 @@ class EncoderNetwork:
 
             # Loss functions - mean squared error
             self.encoding_loss = tf.reduce_mean(tf.squared_difference(self.encoding, self.enc_target))
-            self.value_loss = tf.reduce_sum(tf.square(self.value - self.val_target))
+            self.value_loss = tf.reduce_mean(tf.squared_difference(self.value, self.val_target))
 
-            self.loss = self.encoding_loss + 0.8 * self.value_loss
+            self.loss = self.encoding_loss + self.value_loss
 
             self.rounded_loss = tf.reduce_mean(tf.squared_difference(self.encoding_rounded, self.enc_target))
 

@@ -97,7 +97,7 @@ class Env:
         # if store is false, there is no active game on the server
         # Then simply overwrite and return
 
-        print('{} \t : Terminating game id {}'.format(self._id_store.name, self._game_id))
+        # print('{} \t : Terminating game id {}'.format(self._id_store.name, self._game_id))
         sys.stdout.flush()
 
         if self._game_id is not None:
