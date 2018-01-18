@@ -14,18 +14,18 @@ class Network():
             self.imageIn = tf.reshape(self.inputs, shape=[-1, height, width, depth])
 
             self.conv1 = slim.conv2d(activation_fn=tf.nn.elu,
-                                     inputs=self.imageIn, num_outputs=32,
-                                     kernel_size=[3, 3], stride=[2, 2], padding='VALID')
+                                     inputs=self.imageIn, num_outputs=64,
+                                     kernel_size=[3, 3], stride=[1, 1], padding='VALID')
 
             self.conv2 = slim.conv2d(activation_fn=tf.nn.elu,
                                      inputs=self.conv1, num_outputs=32,
-                                     kernel_size=[1, 1], stride=[1, 1], padding='VALID')
+                                     kernel_size=[3, 3], stride=[1, 1], padding='VALID')
 
-            self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
-                                     inputs=self.conv2, num_outputs=32,
-                                     kernel_size=[1, 1], stride=[1, 1], padding='VALID')
+            # self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
+            #                          inputs=self.conv2, num_outputs=32,
+            #                          kernel_size=[2, 2], stride=[1, 1], padding='VALID')
 
-            hidden = slim.fully_connected(slim.flatten(self.conv3), 256, activation_fn=tf.nn.elu)
+            hidden = slim.fully_connected(slim.flatten(self.conv2), 256, activation_fn=tf.nn.elu)
 
             # Recurrent network for temporal dependencies
             lstm_cell = tf.contrib.rnn.BasicLSTMCell(256, state_is_tuple=True)
