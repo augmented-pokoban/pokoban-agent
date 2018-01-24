@@ -154,6 +154,6 @@ class Env:
 
     def copy(self, store=False):
         game_id = api.copy_game(self._game_id)
-        env = Env(game_id=game_id)
+        env = Env(game_id=game_id, id_store=IdStore(game_id))
         env._store = store
         return env

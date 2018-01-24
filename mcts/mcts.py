@@ -72,8 +72,6 @@ class MCTS:
         #
         # return random.choice(best_children)
 
-        print(best_child)
-
         return best_child
 
     def simulate(self, front):

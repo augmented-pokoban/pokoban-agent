@@ -95,7 +95,7 @@ class Worker:
                 rnn_state = self.local_AC.state_init
                 self.batch_rnn_state = rnn_state
 
-                mcts = MCTS(s, 0, self.env, NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size)
+                mcts = MCTS(s, 0, self.env.copy(), NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size)
 
                 while not done and episode_step_count < max_episode_length:
                     if self.use_mcts and not self.explore_self:
@@ -112,8 +112,7 @@ class Worker:
                     except Exception as e:
                         self.env._store = True
                         self.env.terminate('episode count: ' + str(episode_count))
-                        print(e)
-                        sys.exit()
+                        raise e
 
                     if done:
                         print('Episode: {} Steps: {} Worker: {} Reward: {} : COMPLETED'.format(episode_count,
@@ -201,7 +200,7 @@ class Worker:
         self.batch_rnn_state = rnn_state
 
         t = 0
-        mcts = MCTS(s, 0, self.env, NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size, store_mcts)
+        mcts = MCTS(s, 0, self.env.copy(), NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size, store_mcts)
 
         while not done and t < 100:
             a_mcts = mcts.search(self.searches, episode_count, t)
