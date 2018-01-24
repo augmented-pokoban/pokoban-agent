@@ -37,7 +37,8 @@ class Env:
 
         self._id_store = id_store
         self._has_more = True
-        self._last_id = id_store.get_id()
+        if id_store is not None:
+            self._last_id = id_store.get_id()
 
         if self._use_server and not game_id:
             self._maps = self._load_maps(self._batch_size)
@@ -153,6 +154,6 @@ class Env:
 
     def copy(self, store=False):
         game_id = api.copy_game(self._game_id)
-        env = Env(game_id=game_id['gameID'])
+        env = Env(game_id=game_id)
         env._store = store
         return env

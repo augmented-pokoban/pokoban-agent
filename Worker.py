@@ -40,36 +40,35 @@ class Worker:
     def train(self, rollout, sess, gamma, bootstrap_value):
         rollout = np.array(rollout)
         observations = rollout[:, 0]
-        actions = rollout[:, 1]
+        actions_mcts = rollout[:, 1]
         rewards = rollout[:, 2]
-        # next_observations = rollout[:, 3]
         values = rollout[:, 5]
 
         # Here we take the rewards and values from the rollout, and use them to
         # generate the advantage and discounted returns.
         # The advantage function uses "Generalized Advantage Estimation"
-        #self.rewards_plus = np.asarray(rewards.tolist() + [bootstrap_value])
-        #discounted_rewards = discount(self.rewards_plus, gamma)[:-1]
+        # self.rewards_plus = np.asarray(rewards.tolist() + [bootstrap_value])
+        # discounted_rewards = discount(self.rewards_plus, gamma)[:-1]
         self.value_plus = np.asarray(values.tolist() + [bootstrap_value])
         advantages = rewards + gamma * self.value_plus[1:] - self.value_plus[:-1]
         advantages = discount(advantages, gamma)
 
         # Update the global network using gradients from loss
         # Generate network statistics to periodically save
-        feed_dict = {#self.local_AC.target_v: discounted_rewards,
-                     self.local_AC.inputs: np.vstack(observations),
-                     self.local_AC.actions: actions,
-                     self.local_AC.advantages: advantages,
-                     self.local_AC.state_in[0]: self.batch_rnn_state[0],
-                     self.local_AC.state_in[1]: self.batch_rnn_state[1]}
-        p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run([#self.local_AC.value_loss,
-                                                                     self.local_AC.policy_loss,
-                                                                     self.local_AC.entropy,
-                                                                     self.local_AC.grad_norms,
-                                                                     self.local_AC.var_norms,
-                                                                     self.local_AC.state_out,
-                                                                     self.local_AC.apply_grads],
-                                                                    feed_dict=feed_dict)
+        feed_dict = {  # self.local_AC.target_v: discounted_rewards,
+            self.local_AC.inputs: np.vstack(observations),
+            self.local_AC.policy_mcts: actions_mcts,
+            self.local_AC.advantages: advantages,
+            self.local_AC.state_in[0]: self.batch_rnn_state[0],
+            self.local_AC.state_in[1]: self.batch_rnn_state[1]}
+        p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run([  # self.local_AC.value_loss,
+            self.local_AC.policy_loss,
+            self.local_AC.entropy,
+            self.local_AC.grad_norms,
+            self.local_AC.var_norms,
+            self.local_AC.state_out,
+            self.local_AC.apply_grads],
+            feed_dict=feed_dict)
         return p_l / len(rollout), e_l / len(rollout), g_n, v_n
 
     def work(self, max_episode_length, gamma, sess, coord, saver, max_buffer_length):
@@ -96,26 +95,20 @@ class Worker:
                 rnn_state = self.local_AC.state_init
                 self.batch_rnn_state = rnn_state
 
-                mcts = None
-                if self.use_mcts:
-                    mcts = MCTS(s, 50, self.env, NetworkWrapper(sess, rnn_state, self.eval_fn))
+                mcts = MCTS(s, 0, self.env, NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size)
 
                 while not done and episode_step_count < max_episode_length:
-                    if self.use_mcts:
-                        if not self.explore_self:
-                            print('The worker should be set to explore self when using MCTS. Terminating...')
-                            sys.exit(1)
+                    if self.use_mcts and not self.explore_self:
+                        print('The worker should be set to explore self when using MCTS. Terminating...')
+                        sys.exit(1)
 
-                        a = mcts.search(self.searches)
-                        v = self.value_fn(sess, s, rnn_state)
-                    elif self.explore_self:
-                        a, v, rnn_state = self.eval_fn(sess, s, rnn_state)
-                    else:
-                        a, v = self.env.get_expert_action_value()
+                    # a is a vector of probabilities for actions
+                    a_mcts = mcts.search(self.searches)
+                    a_pol, v, rnn_state = self.eval_fn(sess, s, rnn_state)
 
                     # Create step
                     try:
-                        s1, r, done, _ = self.env.step(a)
+                        s1, r, done, _ = self.env.step(np.argmax(a_mcts))
                     except Exception as e:
                         self.env._store = True
                         self.env.terminate('episode count: ' + str(episode_count))
@@ -129,7 +122,7 @@ class Worker:
                                                                                                r))
 
                     # Update values, states, total amount of steps, etc
-                    episode_buffer.append([s, a, r, s1, done, v])
+                    episode_buffer.append([s, a_mcts, r, s1, done, v])
                     episode_values.append(v)
 
                     episode_reward += r
@@ -153,14 +146,18 @@ class Worker:
                 self.episode_lengths.append(episode_step_count)
                 self.episode_mean_values.append(np.mean(episode_values))
 
+                if self.use_mcts:
+                    mcts.terminate()
+
                 # Update the network using the episode buffer at the end of the episode.
                 if len(episode_buffer) is not 0:
                     p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
 
                 if episode_count % 100 == 0 and self.name == 'worker_0' and episode_count is not 0:
                     print('Saved model')
+                    store_mcts = episode_count % 1000 == 0
                     self.save(saver, sess, episode_count)
-                    self.play(sess, episode_count)
+                    self.play(sess, episode_count, store_mcts=store_mcts)
 
                 # Periodically save model parameters, and summary statistics.
                 if episode_count % 5 == 0 and episode_count is not 0:
@@ -192,7 +189,7 @@ class Worker:
             sys.stdout.flush()
             self.save(saver, sess, episode_count)
 
-    def play(self, sess, episode_count, level=None):
+    def play(self, sess, episode_count, level=None, store_mcts=False):
 
         play_env = self.env.get_play_env()
 
@@ -204,15 +201,13 @@ class Worker:
         self.batch_rnn_state = rnn_state
 
         t = 0
-        success = True
+        mcts = MCTS(s, 0, self.env, NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size, store_mcts)
 
-        while not done and t < 300:
-            if not success:
-                a, v, rnn_state = self.eval_fn(sess, s, rnn_state, deterministic=False)
-            else:
-                a, v, rnn_state = self.eval_fn(sess, s, rnn_state, deterministic=True)
+        while not done and t < 100:
+            a_mcts = mcts.search(self.searches, episode_count, t)
+            _, v, rnn_state = self.eval_fn(sess, s, rnn_state)
 
-            s, r, done, success = play_env.step(a)
+            s, r, done, _ = play_env.step(a_mcts)
             s = process_frame(s, self.s_size)
             t += 1
 
@@ -222,7 +217,7 @@ class Worker:
     def save(self, saver, sess, episode_count):
         saver.save(sess, self.model_path + '/model-' + str(episode_count) + '.cptk')
 
-    def eval_fn(self, sess, state, rnn_state, deterministic=False):
+    def eval_fn(self, sess, state, rnn_state, deterministic=False, get_all_actions=False):
 
         a_dist, v, rnn_state = sess.run(
             [self.local_AC.policy, self.local_AC.value, self.local_AC.state_out],
@@ -236,7 +231,9 @@ class Worker:
 
         a, v = None, v[0, 0]
 
-        if deterministic:
+        if get_all_actions:
+            a = a_dist[0]
+        elif deterministic:
             a = np.argmax(a_dist)
         else:
             a = np.random.choice(self.actions)

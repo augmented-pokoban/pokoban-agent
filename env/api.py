@@ -63,8 +63,8 @@ def init(game_file):
 
 
 def copy_game(game_id):
-    return None
-    # return requests.post(base_url + 'pokoban/' + game_id + '/action/copy').json()
+    result = post_request('pokoban/' + game_id + '/action/copy')
+    return result['gameID']
 
 
 def step(game_id, action):

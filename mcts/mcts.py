@@ -1,96 +1,123 @@
 import math
-import random
-
-from helper import process_frame
+import os
 from mcts.node import Node
 
 
 class MCTS:
 
-    def __init__(self, state, max_steps, game_env, network_wrapper, scalar=1/math.sqrt(2.0)):
-        self.root = Node(state, game_env.get_action_count())
+    def __init__(self, state, max_steps, game_env, network_wrapper, s_size, store_mcts=False, scalar=1 / math.sqrt(2.0)):
+        self.root = Node(state, game_env, network_wrapper, s_size)
         self.max_steps = max_steps
         self.game_env = game_env
         self.network_wrapper = network_wrapper
         self.scalar = scalar
+        self.store_mcts = store_mcts
+        self.tree_path = 'trees/'
+        if self.store_mcts and not os.path.exists(self.tree_path):
+            os.mkdir(self.tree_path)
 
-    def search(self, budget):
-        for budget in range(budget):
-            front = self.select()
-            value = self.simulate(front)
-            self.backpropagate(front, value)
+    def search(self, budget, episode=0, step=0):
+        leaves = self.root.get_leaves_in_tree()
+        count = 0
 
-        # Update root by getting the best child.. Might need another method that selects the
-        # most visited node
-        # TODO: Do the above
-        self.root = self.best_child()
-        self.root.parent = None
-        return self.root.action
+        while count < budget:
+            frontier, leaves = self.select(leaves)
+            count += len(frontier)
+
+            for front in frontier:
+                value = self.simulate(front)
+                self.backpropagate(front, value)
+
+        if self.store_mcts:
+            self.draw(self.tree_path + '{}_mcts_tree_{}.txt'.format(episode, step))
+
+        new_root = self.best_child(self.root.children)
+        new_root.parent = None
+
+        self.root.terminate(ignore_action=new_root.action)
+        self.root = new_root
+
+        return self.root.get_action_dist()
 
     # The goal is to either expand the node, or to select the best child of the node. Only applicable to the root
-    def select(self):
+    def select(self, leaves):
+        # Select the most promising node of all
+        # 1. clear up list of leaves that has already been expanded
+        # 2. Select the best leaf to expand
+        # 3. Expand the leaf
+
         if not self.root.fully_expanded():
-            return self.expand_root()
+            nodes = self.root.expand_all()
         else:
-            return self.best_child()
+            leaves = list(filter(lambda leaf: not leaf.fully_expanded(), leaves))
+            best_leaf = self.best_child(leaves)
+            nodes = best_leaf.expand_all()
 
-    def expand_root(self):
-        next_action = self.root.unexplored_actions.pop()
-        return Node(None, self.game_env.get_action_count(), self.root, next_action)
+        leaves += nodes
+        return nodes, leaves
 
-    # TODO: Investigate if this is the best method
-    def best_child(self):
-        best_score = 0.0
-        best_children = []
-        for child in self.root.children:
-            exploit = child.value / child.visits
-            explore = math.sqrt(2.0 * math.log(self.root.visits) / float(child.visits))
-            score = exploit + self.scalar * explore
-            if score == best_score:
-                best_children.append(child)
-            if score > best_score:
-                best_children = [child]
-                best_score = score
+    def best_child(self, children):
+        # best_score = 1e-5
+        best_child = sorted(children, key=lambda child: child.UBT(self.root.visits))
+        best_child = best_child[-1]
 
-        return random.choice(best_children)
+        # for child in children:
+        #     score = child.UBT(self.root.visits)
+        #
+        #     if score == best_score:
+        #         best_children.append(child)
+        #     if score > best_score:
+        #         best_children = [child]
+        #         best_score = score
+        #
+        # return random.choice(best_children)
 
-    def simulate(self, front, store=False):
-        t = 0
-        v = None
-        game_env = self.game_env.copy(store=store)
-        self.network_wrapper.start()
+        print(best_child)
 
-        # State here is a vector
-        state, done = self.apply_previous_steps(front, game_env)
-        front.state = state
+        return best_child
 
-        while not done and t < self.max_steps:
-            a, v = self.network_wrapper.eval(state)
-            state, _, done, _ = game_env.step(a)
-            state = process_frame(state, self.root.state.shape[0])
-            t += 1
+    def simulate(self, front):
+        """
+        We have left out the ability to simulate ahead, mostly for simplicity
+        :param front:
+        :return: The value of the node
+        """
 
-        # Kill game on server
-        game_env.terminate(description='Value of game: ' + str(v))
+        a, v = front.eval()
+
         return v
+    #
+    # def apply_previous_steps(self, front, game_env):
+    #     actions = []
+    #     while front.parent is not None:
+    #         actions.append(front.action)
+    #         front = front.parent
+    #
+    #     # reverse actions such that we apply them from the root
+    #     actions.reverse()
+    #
+    #     state = self.root.state
+    #     done = False
+    #
+    #     for a in actions:
+    #         state, _, done, _ = game_env.step(a)
+    #         state = process_frame(state, self.root.state.shape[0])
+    #
+    #     return state, done
 
-    def apply_previous_steps(self, front, game_env):
-        actions = []
-        while front.parent is not None:
-            actions.append(front.action)
-            front = front.parent
+    def terminate(self):
+        self.root.terminate()
 
-        # reverse actions such that we apply them from the root
-        actions.reverse()
+    def draw(self, file_name):
+        content = ['digraph {', 'node [rx=5 ry=5 labelStyle="font: 300 14px Helvetica"]',
+                   'edge [labelStyle="font: 300 14px Helvetica"]']
 
-        state = self.root.state
-        done = False
+        content = content + self.root.draw(self.root.visits)
+        content += ['}']
+        file_content = '\n'.join(content)
 
-        for a in actions:
-            state, _, done, _ = game_env.step(a)
-            state = process_frame(state, self.root.state.shape[0])
-
-        return state, done
+        with open(file_name, 'w') as file:
+            file.write(file_content)
 
     @staticmethod
     def backpropagate(node, value):

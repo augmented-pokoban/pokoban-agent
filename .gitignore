@@ -57,3 +57,4 @@ autoencoder/Autoencoder
 autoencoder/batches
 autoencoder/enc_model
 zipped/
+enc_model_v1/
