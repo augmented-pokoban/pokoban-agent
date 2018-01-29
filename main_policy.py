@@ -11,7 +11,7 @@ from env.Env import Env
 from support.integrated_server import start_server
 
 max_episode_length = 100
-max_buffer_length = 30
+max_buffer_length = 5
 gamma = .99  # discount rate for advantage estimation and reward discounting
 height = 20
 width = 20
@@ -24,8 +24,8 @@ use_mcts = True
 mcts_simulations = 100
 model_path = './model'
 last_id_path = './last_ids'
-num_workers = 20 # Set workers ot number of available CPU threads
-use_integrated_server = True
+num_workers = 1 # Set workers ot number of available CPU threads
+use_integrated_server = False
 
 tf.reset_default_graph()
 

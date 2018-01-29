@@ -4,15 +4,15 @@ from mcts.node import Node
 
 
 class MCTS:
-
-    def __init__(self, state, max_steps, game_env, network_wrapper, s_size, store_mcts=False, scalar=1 / math.sqrt(2.0)):
+    def __init__(self, state, max_steps, game_env, network_wrapper, s_size, store_mcts=False, scalar=1 / math.sqrt(2.0),
+                 worker_name='default'):
         self.root = Node(state, game_env, network_wrapper, s_size)
         self.max_steps = max_steps
         self.game_env = game_env
         self.network_wrapper = network_wrapper
         self.scalar = scalar
         self.store_mcts = store_mcts
-        self.tree_path = 'trees/'
+        self.tree_path = 'trees/{}/'.format(worker_name)
         if self.store_mcts and not os.path.exists(self.tree_path):
             os.mkdir(self.tree_path)
 
@@ -23,6 +23,7 @@ class MCTS:
         while count < budget:
             frontier, leaves = self.select(leaves)
             count += len(frontier)
+            # print('Frontier len: {}, leaves length: {}, count: {}'.format(len(frontier), len(leaves), count))
 
             for front in frontier:
                 value = self.simulate(front)
@@ -33,11 +34,12 @@ class MCTS:
 
         new_root = self.best_child(self.root.children)
         new_root.parent = None
+        action_dist = self.root.get_action_dist()
 
         self.root.terminate(ignore_action=new_root.action)
         self.root = new_root
 
-        return self.root.get_action_dist()
+        return action_dist
 
     # The goal is to either expand the node, or to select the best child of the node. Only applicable to the root
     def select(self, leaves):
@@ -84,6 +86,7 @@ class MCTS:
         a, v = front.eval()
 
         return v
+
     #
     # def apply_previous_steps(self, front, game_env):
     #     actions = []
@@ -122,6 +125,3 @@ class MCTS:
         while node is not None:
             node.update(value)
             node = node.parent
-
-
-

@@ -9,7 +9,7 @@ class Node:
         self.game_env = game_env
         self.network_wrapper = network_wrapper
         self.s_size = s_size
-        self.visits = 0 if parent is not None else 1
+        self.visits = 0
         self.value = 0.0
         self.action_prop = action_prop
         self.state = state
@@ -87,8 +87,9 @@ class Node:
         return not any(self.unexplored_actions)
 
     def get_action_dist(self):
-        prob = [0] * self.game_env.get_action_count()
+        prob = [0.0] * self.game_env.get_action_count()
         for child in self.children:
+            # print('Root visits: {}, child visits: {}, child action: {}, children: {}'.format(self.visits, child.visits, child.action, len(self.children)))
             prob[child.action] = float(child.visits) / float(self.visits)
 
         return prob

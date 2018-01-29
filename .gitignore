@@ -58,3 +58,5 @@ autoencoder/batches
 autoencoder/enc_model
 zipped/
 enc_model_v1/
+encoder_model_v1/
+last_ids/

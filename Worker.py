@@ -40,9 +40,10 @@ class Worker:
     def train(self, rollout, sess, gamma, bootstrap_value):
         rollout = np.array(rollout)
         observations = rollout[:, 0]
-        actions_mcts = rollout[:, 1]
+        actions_mcts = np.array(list(map(lambda arr: arr.tolist(), rollout[:, 1])))
         rewards = rollout[:, 2]
         values = rollout[:, 5]
+        actions = rollout[:, 6]
 
         # Here we take the rewards and values from the rollout, and use them to
         # generate the advantage and discounted returns.
@@ -57,6 +58,7 @@ class Worker:
         # Generate network statistics to periodically save
         feed_dict = {  # self.local_AC.target_v: discounted_rewards,
             self.local_AC.inputs: np.vstack(observations),
+            self.local_AC.actions: actions,
             self.local_AC.policy_mcts: actions_mcts,
             self.local_AC.advantages: advantages,
             self.local_AC.state_in[0]: self.batch_rnn_state[0],
@@ -95,7 +97,8 @@ class Worker:
                 rnn_state = self.local_AC.state_init
                 self.batch_rnn_state = rnn_state
 
-                mcts = MCTS(s, 0, self.env.copy(), NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size)
+                mcts = MCTS(s, 0, self.env.copy(), NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size,
+                            worker_name=self.name)
 
                 while not done and episode_step_count < max_episode_length:
                     if self.use_mcts and not self.explore_self:
@@ -105,10 +108,11 @@ class Worker:
                     # a is a vector of probabilities for actions
                     a_mcts = mcts.search(self.searches)
                     a_pol, v, rnn_state = self.eval_fn(sess, s, rnn_state)
+                    a = np.argmax(a_mcts)
 
                     # Create step
                     try:
-                        s1, r, done, _ = self.env.step(np.argmax(a_mcts))
+                        s1, r, done, _ = self.env.step(a)
                     except Exception as e:
                         self.env._store = True
                         self.env.terminate('episode count: ' + str(episode_count))
@@ -121,7 +125,8 @@ class Worker:
                                                                                                r))
 
                     # Update values, states, total amount of steps, etc
-                    episode_buffer.append([s, a_mcts, r, s1, done, v])
+                    episode_buffer.append([s, np.asarray(a_mcts), r, s1, done, v, a])
+
                     episode_values.append(v)
 
                     episode_reward += r
@@ -200,7 +205,8 @@ class Worker:
         self.batch_rnn_state = rnn_state
 
         t = 0
-        mcts = MCTS(s, 0, self.env.copy(), NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size, store_mcts)
+        mcts = MCTS(s, 0, self.env.copy(), NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size, store_mcts,
+                    worker_name=self.name)
 
         while not done and t < 100:
             a_mcts = mcts.search(self.searches, episode_count, t)

@@ -57,13 +57,13 @@ class Network():
 
             # Only the worker network need ops for loss functions and gradient updating.
             if scope != 'global':
-                # self.actions = tf.placeholder(shape=[None], dtype=tf.int32)
-                # self.actions_onehot = tf.one_hot(self.actions, a_size, dtype=tf.float32)
+                self.actions = tf.placeholder(shape=[None], dtype=tf.int32)
+                self.actions_onehot = tf.one_hot(self.actions, a_size, dtype=tf.float32)
                 # self.target_v = tf.placeholder(shape=[None], dtype=tf.float32)
                 self.advantages = tf.placeholder(shape=[None], dtype=tf.float32)
                 self.policy_mcts = tf.placeholder(shape=[None, a_size], dtype=tf.float32)
 
-                self.responsible_outputs = self.policy_mcts  # tf.reduce_sum(self.policy * self.actions_onehot, [1])
+                self.responsible_outputs = tf.reduce_sum(self.policy_mcts * self.actions_onehot, [1])
 
                 # Entropy function
                 self.entropy = tf.reduce_sum(self.policy_mcts * tf.log(tf.clip_by_value(self.policy, 1e-15, 1)))
