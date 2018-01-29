@@ -8,6 +8,7 @@ from helper import update_target_graph, discount, process_frame
 from mcts.mcts import MCTS
 from mcts.network_wrapper import NetworkWrapper
 from support.last_id_store import IdStore
+from support.stats_object import StatsObject
 
 
 class Worker:
@@ -78,7 +79,7 @@ class Worker:
         total_steps = 0
         total_levels = 0
         print("Starting worker " + str(self.number))
-
+        stats = []
         with sess.as_default(), sess.graph.as_default():
 
             # This is the beginning of an episode
@@ -157,12 +158,6 @@ class Worker:
                 if len(episode_buffer) is not 0:
                     p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
 
-                if episode_count % 100 == 0 and self.name == 'worker_0' and episode_count is not 0:
-                    print('Saved model')
-                    store_mcts = episode_count % 1000 == 0
-                    self.save(saver, sess, episode_count)
-                    self.play(sess, episode_count, store_mcts=store_mcts)
-
                 # Periodically save model parameters, and summary statistics.
                 if episode_count % 5 == 0 and episode_count is not 0:
                     if self.name == 'worker_0':
@@ -171,17 +166,31 @@ class Worker:
                     mean_reward = np.mean(self.episode_rewards[-5:])
                     mean_length = np.mean(self.episode_lengths[-5:])
                     mean_value = np.mean(self.episode_mean_values[-5:])
-                    summary = tf.Summary()
-                    summary.value.add(tag='Perf/Reward', simple_value=float(mean_reward))
-                    summary.value.add(tag='Perf/Length', simple_value=float(mean_length))
-                    summary.value.add(tag='Perf/Value', simple_value=float(mean_value))
-                    summary.value.add(tag='Losses/Policy Loss', simple_value=float(p_l))
-                    summary.value.add(tag='Losses/Entropy', simple_value=float(e_l))
-                    summary.value.add(tag='Losses/Grad Norm', simple_value=float(g_n))
-                    summary.value.add(tag='Losses/Var Norm', simple_value=float(v_n))
-                    summary.value.add(tag='Levels', simple_value=float(total_levels))
-                    self.summary_writer.add_summary(summary, episode_count)
-                    self.summary_writer.flush()
+                    stats.append(
+                        StatsObject(episode_count, mean_reward, mean_length, mean_value, p_l, e_l, g_n, v_n,
+                                    total_levels))
+
+                if episode_count % 100 == 0 and self.name == 'worker_0' and episode_count is not 0:
+                    print('Saved model')
+                    store_mcts = episode_count % 100 == 0
+                    self.save(saver, sess, episode_count)
+                    self.play(sess, episode_count, store_mcts=store_mcts)
+
+                if episode_count % 100 == 0 and episode_count is not 0:
+
+                    for stat in stats:
+                        summary = tf.Summary()
+                        summary.value.add(tag='Perf/Reward', simple_value=float(stat.mean_reward))
+                        summary.value.add(tag='Perf/Length', simple_value=float(stat.mean_length))
+                        summary.value.add(tag='Perf/Value', simple_value=float(stat.mean_value))
+                        summary.value.add(tag='Losses/Policy Loss', simple_value=float(stat.p_l))
+                        summary.value.add(tag='Losses/Entropy', simple_value=float(stat.e_l))
+                        summary.value.add(tag='Losses/Grad Norm', simple_value=float(stat.g_n))
+                        summary.value.add(tag='Losses/Var Norm', simple_value=float(stat.v_n))
+                        summary.value.add(tag='Levels', simple_value=float(stat.total_levels))
+                        self.summary_writer.add_summary(summary, stat.episode)
+                        self.summary_writer.flush()
+                        stats = []
 
                 if self.name == 'worker_0':
                     sess.run(self.increment)

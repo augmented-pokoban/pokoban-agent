@@ -69,6 +69,7 @@ def new_matrix_to_state(matrix, dimensions):
 
     def map_type(x):
         return {
+            NEW_INDEX.Field: [],
             NEW_INDEX.Wall: [('walls', '+')],
             NEW_INDEX.Agent: [('agents', '0')],
             NEW_INDEX.BoxA: [('boxes', 'A')],
@@ -79,7 +80,8 @@ def new_matrix_to_state(matrix, dimensions):
 
     for row in range(dimensions):
         for col in range(dimensions):
-            dicts = map_type(matrix[row, col])
+            val = matrix[row, col]
+            dicts = map_type(val)
 
             for field_type in dicts:
                 (key, letter) = field_type

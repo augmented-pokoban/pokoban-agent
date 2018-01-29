@@ -92,7 +92,7 @@ class EncoderNetwork:
             self.value_loss = tf.reduce_mean(tf.square(self.value - self.val_target))
             self.encoding_loss_rounded = tf.reduce_mean(tf.squared_difference(self.encoding_rounded, self.enc_target))
 
-            self.loss = self.encoding_loss  + self.value_loss
+            self.loss = self.encoding_loss + self.value_loss
 
             self.train_op = trainer.minimize(self.loss)
 
@@ -140,6 +140,6 @@ class EncoderNetwork:
             self.action: x_action
         }
 
-        val, y = sess.run([self.value, self.encoding], feed_dict=feed_dict)
+        val, y = sess.run([self.value, self.encoding_rounded], feed_dict=feed_dict)
 
         return val, y

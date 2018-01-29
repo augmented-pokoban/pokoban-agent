@@ -17,7 +17,7 @@ if not os.path.exists(batch_location):
 count_error_moves = 0
 count_succ_moves = 0
 count_goal_moves = 0
-max_moves = 100
+max_moves = 10
 
 while count_error_moves < max_moves:
     game = replay_loader.get_next()
