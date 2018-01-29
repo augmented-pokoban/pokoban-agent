@@ -80,7 +80,7 @@ class EncoderNetwork:
             )
 
             self.value = slim.fully_connected(val_out,
-                                              1,
+                                              a_size,
                                               activation_fn=None,
                                               weights_initializer=normalized_columns_initializer(1.0),
                                               biases_initializer=None)

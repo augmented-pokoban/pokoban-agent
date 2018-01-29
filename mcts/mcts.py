@@ -12,16 +12,17 @@ class MCTS:
         self.network_wrapper = network_wrapper
         self.scalar = scalar
         self.store_mcts = store_mcts
-        self.tree_path = 'trees/{}/'.format(worker_name)
+        self.tree_path = 'trees/{}'.format(worker_name)
+        self.leaves = dict()
+
         if self.store_mcts and not os.path.exists(self.tree_path):
             os.mkdir(self.tree_path)
 
     def search(self, budget, episode=0, step=0):
-        leaves = self.root.get_leaves_in_tree()
         count = 0
 
         while count < budget:
-            frontier, leaves = self.select(leaves)
+            frontier = self.select()
             count += len(frontier)
             # print('Frontier len: {}, leaves length: {}, count: {}'.format(len(frontier), len(leaves), count))
 
@@ -30,19 +31,19 @@ class MCTS:
                 self.backpropagate(front, value)
 
         if self.store_mcts:
-            self.draw(self.tree_path + '{}_mcts_tree_{}.txt'.format(episode, step))
+            self.draw('{}/{}_mcts_tree_{}.txt'.format(self.tree_path, episode, step))
 
         new_root = self.best_child(self.root.children)
         new_root.parent = None
         action_dist = self.root.get_action_dist()
 
-        self.root.terminate(ignore_action=new_root.action)
+        self.root.terminate(self.leaves, ignore_action=new_root.action)
         self.root = new_root
 
         return action_dist
 
     # The goal is to either expand the node, or to select the best child of the node. Only applicable to the root
-    def select(self, leaves):
+    def select(self):
         # Select the most promising node of all
         # 1. clear up list of leaves that has already been expanded
         # 2. Select the best leaf to expand
@@ -51,16 +52,23 @@ class MCTS:
         if not self.root.fully_expanded():
             nodes = self.root.expand_all()
         else:
-            leaves = list(filter(lambda leaf: not leaf.fully_expanded(), leaves))
-            best_leaf = self.best_child(leaves)
+            best_leaf = self.best_child(self.leaves.items())
+            # Pop the child from the dict
+            self.leaves.pop(best_leaf.id, None)
             nodes = best_leaf.expand_all()
 
-        leaves += nodes
-        return nodes, leaves
+        for node in nodes:
+            self.leaves[node.id] = node
+
+        return nodes
 
     def best_child(self, children):
         # best_score = 1e-5
         best_child = sorted(children, key=lambda child: child.UBT(self.root.visits))
+
+        if not any(best_child):
+            return None
+
         best_child = best_child[-1]
 
         # for child in children:
@@ -107,7 +115,7 @@ class MCTS:
     #     return state, done
 
     def terminate(self):
-        self.root.terminate()
+        self.root.terminate(dict())
 
     def draw(self, file_name):
         content = ['digraph {', 'node [rx=5 ry=5 labelStyle="font: 300 14px Helvetica"]',

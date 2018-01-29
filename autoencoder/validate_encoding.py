@@ -50,12 +50,12 @@ with tf.Session() as sess:
         #
         # overfit = y_state - exp_state
         # overfit = np.clip(overfit, 0, 1)
-
+        print(exp_reward)
         result = dict()
-        exp_reward = exp_reward[i]
-        print(y_reward)
-        exit(0)
-        y_reward = np.argmax(y_reward[0][i])
+        exp_r = exp_reward[i]
+
+
+        #y_reward = np.argmax(y_reward[0][i])
 
         print(np.sum(diff))
 
@@ -64,13 +64,14 @@ with tf.Session() as sess:
         # result['overfit_errors'] = np.sum(overfit)
         result['x_state'] = new_matrix_to_state(reshape_back(x_state[i], height, width), 20)
         result['y_state_exp'] = new_matrix_to_state(reshape_back(exp_state[i], height, width), 20)
-        result['y_state_eval'] = new_matrix_to_state(reshape_back(y_state[0], height, width), 20)
-        result['diff'] = new_matrix_to_state(reshape_back(diff[0], height, width), 20)
-        result['y_reward_exp'] = Env.get_reward_meanings()[exp_reward]
-        result['y_reward_eval'] = Env.get_reward_meanings()[y_reward]
+        result['y_state_eval'] = new_matrix_to_state(reshape_back(y_state[i], height, width), 20)
+        result['diff'] = new_matrix_to_state(reshape_back(diff, height, width), 20)
+        result['y_reward_exp'] = Env.get_reward_meanings()[exp_r]
+        # result['y_reward_eval'] = Env.get_reward_meanings()[y_reward]
         result['action'] = Env.get_action_meanings()[x_action[i, 0]]
-        result['success'] = bool(exp_reward == y_reward)
+        # result['success'] = bool(exp_reward == y_reward)
         # result['missing'] = matrix_to_state(reshape_back(missing, height, width, depth), 20)
         # result['overfit'] = matrix_to_state(reshape_back(overfit, height, width, depth), 20)
 
         api.post_encoding(result)
+        print('Submitted {}'.format(i + 1))

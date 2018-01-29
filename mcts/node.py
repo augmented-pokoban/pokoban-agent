@@ -6,6 +6,7 @@ import uuid
 
 class Node:
     def __init__(self, state, game_env, network_wrapper, s_size, parent=None, action=None, action_prop=1):
+        self.id = 'n_' + str(uuid.uuid4().hex)
         self.game_env = game_env
         self.network_wrapper = network_wrapper
         self.s_size = s_size
@@ -65,12 +66,16 @@ class Node:
 
         return leaves
 
-    def terminate(self, ignore_action=None):
+    def terminate(self, leaves, ignore_action=None):
         self.game_env.terminate()
+
+        # Remove the node from the leaves dict if it exists
+        leaves.pop(self.id, None)
+
         for child in self.children:
             if child.action is ignore_action:
                 continue
-            child.terminate()
+            child.terminate(leaves)
 
     def UBT(self, root_visits, scalar=1 / math.sqrt(2.0)):
 
@@ -95,10 +100,10 @@ class Node:
         return prob
 
     def draw(self, root_visits, prev_id=None):
-        id = 'n_' + str(uuid.uuid4().hex)
+
         data = 'UBT: {}, Vis: {}, Val: {}, FE: {}'.format(self.UBT(root_visits), self.visits, self.value,
                                                           self.fully_expanded())
-        content = [id + ' [label="{}"];'.format(data)]
+        content = [self.id + ' [label="{}"];'.format(data)]
         if prev_id is not None:
             content.append(
                 '{} -> {} [label="{}"];'.format(prev_id, id, self.game_env.get_action_meanings()[self.action]))
