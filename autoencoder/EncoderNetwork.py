@@ -14,7 +14,7 @@ class EncoderNetwork:
             self.input_image = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
             self.action = tf.placeholder(shape=[None, 1], dtype=tf.int32)
             self.enc_target = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
-            self.reward = tf.placeholder(shape=[None], dtype=tf.int32)
+            self.reward = tf.placeholder(shape=[None, 1], dtype=tf.int32)
 
             # one-hot action vector
 
@@ -73,16 +73,16 @@ class EncoderNetwork:
                                      inputs=self.conv3, num_outputs=16,
                                      kernel_size=[1, 1], stride=[1, 1], padding='VALID')
 
-            val_out = slim.fully_connected(
+            r_out = slim.fully_connected(
                 slim.flatten(self.conv4),
                 512,
                 activation_fn=tf.nn.elu
             )
 
-            self.value = slim.fully_connected(val_out,
-                                              a_size,
-                                              activation_fn=None,
-                                              weights_initializer=normalized_columns_initializer(1.0),
+            self.value = slim.fully_connected(r_out,
+                                              r_size,
+                                              activation_fn=tf.nn.softmax,
+                                              weights_initializer=normalized_columns_initializer(0.01),
                                               biases_initializer=None)
 
             # Loss functions - mean squared error
