@@ -7,7 +7,7 @@ import uuid
 class Node:
     def __init__(self, state, game_env, network_wrapper, s_size, parent=None, action=None, action_prop=1):
         self.id = 'n_' + str(uuid.uuid4().hex)
-        self.game_env = game_env  # Notice that this gets terminated for all except leaves
+        self.game_env = game_env  # Notice that this gets terminated for all except leaves and root
         self.network_wrapper = network_wrapper
         self.s_size = s_size
         self.visits = 0
@@ -28,7 +28,7 @@ class Node:
             parent.add_child(self)
             self.depth = parent.depth + 1
             # Append parent id
-            self.parent_ids = parent.parent_ids
+            self.parent_ids = set(parent.parent_ids)
             self.parent_ids.add(parent.id)
 
     def add_child(self, child_node):
@@ -59,6 +59,8 @@ class Node:
                      self.p_a[action])
 
                 new_env = self.game_env.copy()
+
+        new_env.terminate()
 
         # Terminate because we don't need it anymore - and reset parent_ids, they have been used
         if not self._is_root():

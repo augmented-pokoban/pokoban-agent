@@ -1,5 +1,8 @@
 import math
 import os
+
+import numpy as np
+
 from mcts.node import Node
 
 
@@ -34,14 +37,20 @@ class MCTS:
             self.draw('{}/{}_mcts_tree_{}.txt'.format(self.tree_path, episode, step))
 
         # Select best child and update new root
-        new_root = self.best_child(self.root.children)
+        action_dist = self.root.get_action_dist()
+        best_action = np.argmax(action_dist)
+
+        new_root = list(filter(lambda child: child.action == best_action, self.root.children))[0]
         new_root.parent = None
+
+        print(action_dist)
+        print('Best action selected: {}'.format(best_action))
+        print('New root: {}'.format(new_root.id))
+        print('Leaves: {}'.format(len(self.leaves)))
 
         # The new root must have the new environment
         self.root.game_env.step(new_root.action)
         new_root.game_env = self.root.game_env
-
-        action_dist = self.root.get_action_dist()
 
         self._terminate_leaves(new_root.id)
         self.root = new_root
@@ -56,9 +65,20 @@ class MCTS:
         # 3. Expand the leaf
 
         if not self.root.fully_expanded():
-            nodes = self.root.expand_all()
+            try:
+                nodes = self.root.expand_all()
+            except TypeError:
+                print('Root children: {}, root id: {}, # root parents: {}, has parent: {}'.format(
+                    len(self.root.children), self.root.id, len(self.root.parent_ids), self.root.parent is not None))
+                exit(0)
+
+            self.leaves.pop(self.root.id, None)
         else:
             best_leaf = self.best_child(self.leaves.values())
+
+            if best_leaf is None:
+                print('Leaves: {}, root children: {}'.format(len(self.leaves), len(self.root.children)))
+
             # Pop the child from the dict
             self.leaves.pop(best_leaf.id, None)
             nodes = best_leaf.expand_all()
@@ -121,12 +141,16 @@ class MCTS:
     #     return state, done
 
     def _terminate_leaves(self, new_root_id=None):
-
-        for leaf in self.leaves:
+        leaves = list(self.leaves.values())
+        for leaf in leaves:
             if new_root_id is None:
                 leaf.terminate_env()
-            elif new_root_id not in leaf.parent_ids:
+                continue
+            elif new_root_id not in leaf.parent_ids and new_root_id is not leaf.id:
+                self.leaves.pop(leaf.id, None)
                 leaf.terminate_env()
+
+            leaf.parent_ids.remove(self.root.id)
 
     def terminate(self):
         self.root.terminate_env()
