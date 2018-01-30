@@ -49,9 +49,9 @@ def new_state_to_matrix(state, dimensions):
         matrix[box.row, box.col] = NEW_INDEX.BoxA
 
     for goal in state.goals:
-        if matrix[goal.row, goal.col] is NEW_INDEX.Agent:
+        if matrix[goal.row, goal.col] == NEW_INDEX.Agent:
             matrix[goal.row, goal.col] = NEW_INDEX.AgentAtGoalA
-        elif matrix[goal.row, goal.col] is NEW_INDEX.BoxA:
+        elif matrix[goal.row, goal.col] == NEW_INDEX.BoxA:
             matrix[goal.row, goal.col] = NEW_INDEX.BoxAAtGoalA
         else:
             matrix[goal.row, goal.col] = NEW_INDEX.GoalA
