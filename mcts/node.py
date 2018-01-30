@@ -66,16 +66,8 @@ class Node:
 
         return leaves
 
-    def terminate(self, leaves, ignore_action=None):
+    def terminate_env(self):
         self.game_env.terminate()
-
-        # Remove the node from the leaves dict if it exists
-        leaves.pop(self.id, None)
-
-        for child in self.children:
-            if child.action is ignore_action:
-                continue
-            child.terminate(leaves)
 
     def UBT(self, root_visits, scalar=1 / math.sqrt(2.0)):
 

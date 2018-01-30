@@ -43,9 +43,10 @@ def batch_to_lists(batch, s_size):
     x_action = np.array(list(map(lambda encoded_data: [encoded_data.action], batch)))  # action batch
     y_state = np.array(
         list(map(lambda encoded_data: helper.process_frame(old_matrix_to_new_matrix(encoded_data.state_y,20), s_size), batch)))  # target state batch
-    y_reward = np.array(list(map(lambda encoded_data: encoded_data.reward if not encoded_data.done else 3, batch)))  # target reward batch
+    y_reward = np.array(list(map(lambda encoded_data: [encoded_data.reward] if not encoded_data.done else [3], batch)))  # target reward batch
+    y_success = np.array(list(map(lambda encoded_data: [1 if encoded_data.success else 0], batch)))
 
-    return x_state, x_action, y_state, y_reward
+    return x_state, x_action, y_state, y_reward, y_success
 
 
 class DataLoader():

@@ -13,13 +13,16 @@ class EncoderNetwork:
             # Input and visual encoding layers
             self.input_image = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
             self.action = tf.placeholder(shape=[None, 1], dtype=tf.int32)
+
             self.enc_target = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
+
             self.reward = tf.placeholder(shape=[None, 1], dtype=tf.int32)
-
-            # one-hot action vector
-
             self.val_target = tf.one_hot(self.reward, r_size, dtype=tf.float32)
 
+            self.success_input = tf.placeholder(shape=[None, 1], dtype=tf.int32)
+            self.suc_target = tf.one_hot(self.success_input, 2, dtype=tf.float32)
+
+            # one-hot action vector
             self.actions_onehot = tf.one_hot(self.action, a_size, dtype=tf.int32)
             # self.actions_onehot = tf.cast(self.actions_onehot, tf.float32)
             self.actions_onehot = tf.expand_dims(self.actions_onehot, axis=2)
@@ -85,54 +88,65 @@ class EncoderNetwork:
                                               weights_initializer=normalized_columns_initializer(0.01),
                                               biases_initializer=None)
 
+            self.success = slim.fully_connected(r_out,
+                                                2,
+                                                activation_fn=tf.nn.softmax,
+                                                weights_initializer=normalized_columns_initializer(0.01),
+                                                biases_initializer=None)
+
             # Loss functions - mean squared error
             self.encoding_loss = tf.reduce_mean(tf.squared_difference(self.encoding, self.enc_target))
             self.value_loss = tf.reduce_mean(tf.squared_difference(self.value, self.val_target))
+            self.success_loss = tf.reduce_mean(tf.squared_difference(self.success, self.suc_target))
 
             self.value_loss = tf.reduce_mean(tf.square(self.value - self.val_target))
             self.encoding_loss_rounded = tf.reduce_mean(tf.squared_difference(self.encoding_rounded, self.enc_target))
 
-            self.loss = self.encoding_loss + self.value_loss
+            self.loss = self.encoding_loss + self.value_loss + self.success_loss
 
             self.train_op = trainer.minimize(self.loss)
 
-    def train(self, x_state, x_action, y_state, y_reward, sess):
+    def train(self, x_state, x_action, y_state, y_reward, sess, success):
         feed_dict = {
             self.input_image: x_state,
             self.action: x_action,
             self.enc_target: y_state,
-            self.reward: y_reward
+            self.reward: y_reward,
+            self.success_input: success
         }
 
-        _, enc_loss, val_loss, enc_loss_rounded = sess.run(
+        _, enc_loss, val_loss, enc_loss_rounded, success_loss = sess.run(
             [
                 self.train_op,
                 self.encoding_loss,
                 self.value_loss,
-                self.encoding_loss_rounded
+                self.encoding_loss_rounded,
+                self.success_loss
             ],
             feed_dict=feed_dict
         )
 
-        return enc_loss, val_loss, enc_loss_rounded
+        return enc_loss, val_loss, enc_loss_rounded, success_loss
 
-    def test(self, x_state, x_action, y_state, y_reward, sess):
+    def test(self, x_state, x_action, y_state, y_reward, sess, success):
         feed_dict = {
             self.input_image: x_state,
             self.action: x_action,
             self.enc_target: y_state,
-            self.reward: y_reward
+            self.reward: y_reward,
+            self.success_input: success
         }
 
-        test_enc_loss, test_val_loss = sess.run(
+        test_enc_loss, test_val_loss, test_suc_loss = sess.run(
             [
                 self.encoding_loss,
-                self.value_loss
+                self.value_loss,
+                self.success_loss
             ],
             feed_dict=feed_dict
         )
 
-        return test_enc_loss, test_val_loss
+        return test_enc_loss, test_val_loss, test_suc_loss
 
     def eval(self, x_state, x_action, sess):
         feed_dict = {
@@ -140,6 +154,6 @@ class EncoderNetwork:
             self.action: x_action
         }
 
-        val, y = sess.run([self.value, self.encoding_rounded], feed_dict=feed_dict)
+        val, y, suc = sess.run([self.value, self.encoding_rounded, self.success], feed_dict=feed_dict)
 
-        return val, y
+        return val, y, suc

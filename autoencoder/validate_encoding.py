@@ -7,7 +7,7 @@ import numpy as np
 
 from helper import reshape_back
 
-batch_size = 5
+batch_size = 64
 height = 20
 width = 20
 depth = 1
@@ -32,7 +32,7 @@ with tf.Session() as sess:
 
     # [s_size] in new matrix form for both x_state and exp_state
     x_state, x_action, exp_state, exp_reward = batch_to_lists(data.get_train(), s_size)
-    y_reward, y_state = network.eval(x_state, x_action, sess)
+    y_reward, y_state, y_success = network.eval(x_state, x_action, sess)
 
     for i in range(batch_size):
         # y_state is [s_size] in rounded, new matrix form
@@ -54,8 +54,7 @@ with tf.Session() as sess:
         result = dict()
         exp_r = exp_reward[i]
 
-
-        #y_reward = np.argmax(y_reward[0][i])
+        # y_reward = np.argmax(y_reward[0][i])
 
         print(np.sum(diff))
 

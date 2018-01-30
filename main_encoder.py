@@ -52,6 +52,7 @@ with tf.Session() as sess:
 
     episode_enc_loss = []
     episode_val_loss = []
+    episode_suc_loss = []
     episode = sess.run(network.episodes)
 
     while episode < episode_max:
@@ -68,23 +69,27 @@ with tf.Session() as sess:
             saver.save(sess, model_path + '/model-' + str(episode) + '.cptk')
             continue
 
-        x_state, x_action, y_state, y_reward = batch_to_lists(batch, s_size)
+        x_state, x_action, y_state, y_reward, y_success = batch_to_lists(batch, s_size)
 
-        enc_loss, val_loss, enc_loss_rounded = network.train(x_state, x_action, y_state, y_reward, sess)
+        enc_loss, val_loss, enc_loss_rounded, suc_loss = network.train(x_state, x_action, y_state, y_reward, sess, y_success)
         episode_enc_loss.append(enc_loss)
         episode_val_loss.append(val_loss)
+        episode_suc_loss.append(suc_loss)
 
         if episode % 5 == 0:
 
             batch = data.get_test()
-            x_state, x_action, y_state, y_reward = batch_to_lists(batch, s_size)
-            test_enc_loss, test_val_loss = network.test(x_state, x_action, y_state, y_reward, sess)
+            x_state, x_action, y_state, y_reward, y_success = batch_to_lists(batch, s_size)
+            test_enc_loss, test_val_loss, test_suc_loss = network.test(x_state, x_action, y_state, y_reward, sess, y_success)
 
             mean_enc_loss = np.mean(episode_enc_loss[-5:])
             mean_val_loss = np.mean(episode_val_loss[-5:])
+            mean_suc_loss = np.mean(episode_suc_loss[-5:])
             summary = tf.Summary()
             summary.value.add(tag="Encoding Loss (train)", simple_value=float(mean_enc_loss))
             summary.value.add(tag="Reward Loss (train)", simple_value=float(mean_val_loss))
+            summary.value.add(tag="Success Loss (train)", simple_value=float(mean_suc_loss))
+            summary.value.add(tag="Success Loss (test)", simple_value=float(test_suc_loss))
             summary.value.add(tag="Encoding Loss (test)", simple_value=float(test_enc_loss))
             summary.value.add(tag="Reward Loss (test)", simple_value=float(test_val_loss))
             summary_writer.add_summary(summary, episode)
@@ -92,9 +97,10 @@ with tf.Session() as sess:
 
             if episode % 100 == 0:
                 print(
-                    'Episodes: {}, Encoding loss: {}, Enc. rounded loss: {}, Value loss: {}, Test encoding loss: {}, Test value loss: {}'
-                    .format(episode, episode_enc_loss[-1], enc_loss_rounded, episode_val_loss[-1], test_enc_loss,
-                            test_val_loss))
+                    'Episodes: {}, Encoding loss: {}, Enc. rounded loss: {}, Value loss: {}, Success loss: {}\n'
+                    ' Test encoding loss: {}, Test value loss: {}, Test success loss: {}'
+                    .format(episode, episode_enc_loss[-1], enc_loss_rounded, episode_val_loss[-1], episode_suc_loss[-1],
+                            test_enc_loss, test_val_loss, test_suc_loss))
                 sys.stdout.flush()
 
     print('Episodes: {} TERMINATE'.format(episode))

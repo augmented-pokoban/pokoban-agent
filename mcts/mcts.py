@@ -37,7 +37,8 @@ class MCTS:
         new_root.parent = None
         action_dist = self.root.get_action_dist()
 
-        self.root.terminate(self.leaves, ignore_action=new_root.action)
+        self._terminate_root(self.leaves, ignore_action=new_root.action)
+        # self.root.terminate(self.leaves, ignore_action=new_root.action)
         self.root = new_root
 
         return action_dist
@@ -51,8 +52,13 @@ class MCTS:
 
         if not self.root.fully_expanded():
             nodes = self.root.expand_all()
+            self.leaves.pop(self.root.id, None)
         else:
-            best_leaf = self.best_child(self.leaves.items())
+            best_leaf = self.best_child(self.leaves.values())
+
+            if best_leaf is None:
+                print('Leaves: {}, root children: {}'.format(len(self.leaves), len(self.root.children)))
+
             # Pop the child from the dict
             self.leaves.pop(best_leaf.id, None)
             nodes = best_leaf.expand_all()
@@ -114,8 +120,25 @@ class MCTS:
     #
     #     return state, done
 
+    def _terminate_root(self, leaves, ignore_action=None):
+        self.root.terminate_env()
+        leaves.pop(self.root.id, None)
+
+        children = []
+
+        for child in self.root.children:
+            if child.action is ignore_action:
+                continue
+            children.append(child)
+
+        while any(children):
+            child = children.pop()
+            child.terminate_env()
+            leaves.pop(child.id, None)
+            children += child.children
+
     def terminate(self):
-        self.root.terminate(dict())
+        self._terminate_root(dict())
 
     def draw(self, file_name):
         content = ['digraph {', 'node [rx=5 ry=5 labelStyle="font: 300 14px Helvetica"]',
