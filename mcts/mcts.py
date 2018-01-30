@@ -33,12 +33,17 @@ class MCTS:
         if self.store_mcts:
             self.draw('{}/{}_mcts_tree_{}.txt'.format(self.tree_path, episode, step))
 
+        # Select best child and update new root
         new_root = self.best_child(self.root.children)
         new_root.parent = None
+
+        # The new root must have the new environment
+        self.root.game_env.step(new_root.action)
+        new_root.game_env = self.root.game_env
+
         action_dist = self.root.get_action_dist()
 
-        self._terminate_root(self.leaves, ignore_action=new_root.action)
-        # self.root.terminate(self.leaves, ignore_action=new_root.action)
+        self._terminate_leaves(new_root.id)
         self.root = new_root
 
         return action_dist
@@ -52,13 +57,8 @@ class MCTS:
 
         if not self.root.fully_expanded():
             nodes = self.root.expand_all()
-            self.leaves.pop(self.root.id, None)
         else:
             best_leaf = self.best_child(self.leaves.values())
-
-            if best_leaf is None:
-                print('Leaves: {}, root children: {}'.format(len(self.leaves), len(self.root.children)))
-
             # Pop the child from the dict
             self.leaves.pop(best_leaf.id, None)
             nodes = best_leaf.expand_all()
@@ -120,25 +120,17 @@ class MCTS:
     #
     #     return state, done
 
-    def _terminate_root(self, leaves, ignore_action=None):
-        self.root.terminate_env()
-        leaves.pop(self.root.id, None)
+    def _terminate_leaves(self, new_root_id=None):
 
-        children = []
-
-        for child in self.root.children:
-            if child.action is ignore_action:
-                continue
-            children.append(child)
-
-        while any(children):
-            child = children.pop()
-            child.terminate_env()
-            leaves.pop(child.id, None)
-            children += child.children
+        for leaf in self.leaves:
+            if new_root_id is None:
+                leaf.terminate_env()
+            elif new_root_id not in leaf.parent_ids:
+                leaf.terminate_env()
 
     def terminate(self):
-        self._terminate_root(dict())
+        self.root.terminate_env()
+        self._terminate_leaves()
 
     def draw(self, file_name):
         content = ['digraph {', 'node [rx=5 ry=5 labelStyle="font: 300 14px Helvetica"]',

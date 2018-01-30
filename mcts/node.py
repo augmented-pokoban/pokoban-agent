@@ -7,7 +7,7 @@ import uuid
 class Node:
     def __init__(self, state, game_env, network_wrapper, s_size, parent=None, action=None, action_prop=1):
         self.id = 'n_' + str(uuid.uuid4().hex)
-        self.game_env = game_env
+        self.game_env = game_env  # Notice that this gets terminated for all except leaves
         self.network_wrapper = network_wrapper
         self.s_size = s_size
         self.visits = 0
@@ -21,9 +21,15 @@ class Node:
         self.unexplored_actions = list(range(game_env.get_action_count()))
         shuffle(self.unexplored_actions)
         self.p_a, _ = self.eval()
+        self.depth = 0
+        self.parent_ids = set()
 
         if parent is not None:
             parent.add_child(self)
+            self.depth = parent.depth + 1
+            # Append parent id
+            self.parent_ids = parent.parent_ids
+            self.parent_ids.add(parent.id)
 
     def add_child(self, child_node):
         self.children.append(child_node)
@@ -41,30 +47,28 @@ class Node:
         # Copy environment here
         new_env = self.game_env.copy()
         while any(self.unexplored_actions):
+
             action = self.unexplored_actions.pop()
             state, r, done, success = new_env.step(action)
             if success:
                 if not self.network_wrapper.has_running():
                     self.network_wrapper.eval(self.state)
+
                 new_wrapper = self.network_wrapper.get_next_wrapper()
                 Node(process_frame(state, self.s_size), new_env, new_wrapper, self.s_size, self, action,
                      self.p_a[action])
+
                 new_env = self.game_env.copy()
 
-        new_env.terminate()
+        # Terminate because we don't need it anymore - and reset parent_ids, they have been used
+        if not self._is_root():
+            self.game_env.terminate()
+        self.parent_ids = None
 
         return self.children
 
-    def get_leaves_in_tree(self, root=True):
-        leaves = []
-
-        if not root and not self.fully_expanded():
-            leaves.append(self)
-
-        for child in self.children:
-            leaves = leaves + child.get_leaves_in_tree(root=False)
-
-        return leaves
+    def _is_root(self):
+        return self.parent is None
 
     def terminate_env(self):
         self.game_env.terminate()

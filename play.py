@@ -1,6 +1,6 @@
 import tensorflow as tf
 from Network import Network
-from Worker import Worker
+from Worker_mcts import Worker
 from env.Env import Env
 
 max_episode_length = 301
