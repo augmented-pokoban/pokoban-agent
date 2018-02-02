@@ -1,13 +1,15 @@
 from random import shuffle
+
+from env import mapper
+from env.Env import Env
 from helper import process_frame
 import math
 import uuid
 
 
 class Node:
-    def __init__(self, state, game_env, network_wrapper, s_size, parent=None, action=None, action_prop=1):
+    def __init__(self, state, network_wrapper, s_size, parent=None, action=None, action_prop=1, done=False):
         self.id = 'n_' + str(uuid.uuid4().hex)
-        self.game_env = game_env  # Notice that this gets terminated for all except leaves and root
         self.network_wrapper = network_wrapper
         self.s_size = s_size
         self.visits = 0
@@ -18,9 +20,10 @@ class Node:
         self.parent = parent
         self.action = action
         self.child_actions = set()
-        self.unexplored_actions = list(range(game_env.get_action_count()))
+        self.unexplored_actions = list(range(Env.get_action_count()))
         shuffle(self.unexplored_actions)
         self.p_a, _ = self.eval()
+        self.done = done
         self.depth = 0
         self.parent_ids = set()
 
@@ -44,36 +47,28 @@ class Node:
         Assume that the fully expanded call returns false
         :return:
         """
-        # Copy environment here
-        new_env = self.game_env.copy()
+
+        if self.done:
+            return [self]
+
         while any(self.unexplored_actions):
 
             action = self.unexplored_actions.pop()
-            state, r, done, success = new_env.step(action)
+            state, success, done = mapper.apply_action(self.state, action, Env.get_action_meanings())
             if success:
                 if not self.network_wrapper.has_running():
                     self.network_wrapper.eval(self.state)
 
                 new_wrapper = self.network_wrapper.get_next_wrapper()
-                Node(process_frame(state, self.s_size), new_env, new_wrapper, self.s_size, self, action,
-                     self.p_a[action])
+                Node(process_frame(state, self.s_size), new_wrapper, self.s_size, self, action,
+                     self.p_a[action], done)
 
-                new_env = self.game_env.copy()
-
-        new_env.terminate()
-
-        # Terminate because we don't need it anymore - and reset parent_ids, they have been used
-        if not self._is_root():
-            self.game_env.terminate()
         self.parent_ids = None
 
         return self.children
 
     def _is_root(self):
         return self.parent is None
-
-    def terminate_env(self):
-        self.game_env.terminate()
 
     def UBT(self, root_visits, scalar=1 / math.sqrt(2.0)):
 
@@ -90,7 +85,7 @@ class Node:
         return not any(self.unexplored_actions)
 
     def get_action_dist(self):
-        prob = [0.0] * self.game_env.get_action_count()
+        prob = [0.0] * Env.get_action_count()
         for child in self.children:
             # print('Root visits: {}, child visits: {}, child action: {}, children: {}'.format(self.visits, child.visits, child.action, len(self.children)))
             prob[child.action] = float(child.visits) / float(self.visits)
@@ -104,7 +99,7 @@ class Node:
         content = [self.id + ' [label="{}"];'.format(data)]
         if prev_id is not None:
             content.append(
-                '{} -> {} [label="{}"];'.format(prev_id, id, self.game_env.get_action_meanings()[self.action]))
+                '{} -> {} [label="{}"];'.format(prev_id, id, Env.get_action_meanings()[self.action]))
 
         for child in self.children:
             content += child.draw(root_visits, id)

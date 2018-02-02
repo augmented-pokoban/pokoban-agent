@@ -55,7 +55,6 @@ with tf.Session() as sess:
         exp_r = exp_reward[i]
 
         # y_reward = np.argmax(y_reward[0][i])
-
         print(np.sum(diff))
 
         result['errors'] = np.sum(diff)

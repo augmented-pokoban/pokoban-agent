@@ -18,14 +18,14 @@ width = 20
 depth = 1
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env.get_action_meanings())  # Agent can move in many directions
-load_model = True
+load_model = False
 unsupervised = True
 use_mcts = True
 mcts_simulations = 50
 model_path = './model'
 last_id_path = './last_ids'
-num_workers = 20  # Set workers ot number of available CPU threads
-use_integrated_server = True
+num_workers = 1 # Set workers ot number of available CPU threads
+use_integrated_server = False
 
 tf.reset_default_graph()
 

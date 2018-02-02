@@ -1,7 +1,7 @@
 import sys
 
 from env.mapper import *
-from random import choice, shuffle
+from random import shuffle
 import env.api as api
 from env.expert_moves import ExpertMoves
 from support.last_id_store import IdStore
@@ -130,8 +130,9 @@ class Env:
         self._has_more = len(response['data']) == take
         return maps
 
-    def get_action_count(self):
-        return len(self._actions)
+    @staticmethod
+    def get_action_count():
+        return len(Env._actions)
 
     @staticmethod
     def get_action_meanings():

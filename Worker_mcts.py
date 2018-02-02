@@ -3,11 +3,12 @@ import sys
 import numpy as np
 
 from Network_mcts import *
-from env.Env import Env
-from helper import update_target_graph, discount, process_frame
+from env.Env import Env, new_matrix_to_state, State
+from helper import update_target_graph, discount, process_frame, reshape_back
 from mcts.mcts import MCTS
 from mcts.network_wrapper import NetworkWrapper
 from support.last_id_store import IdStore
+from support.post_state_diff import save_state_diff
 from support.stats_object import StatsObject
 
 
@@ -98,7 +99,7 @@ class Worker:
                 rnn_state = self.local_AC.state_init
                 self.batch_rnn_state = rnn_state
 
-                mcts = MCTS(s, 0, self.env.copy(), NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size,
+                mcts = MCTS(s, 0, NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size,
                             worker_name=self.name)
 
                 while not done and episode_step_count < max_episode_length:
@@ -106,17 +107,20 @@ class Worker:
                         print('The worker should be set to explore self when using MCTS. Terminating...')
                         sys.exit(1)
 
-                    # a is a vector of probabilities for actions
-                    a_mcts = mcts.search(self.searches)
-                    a_pol, v, rnn_state = self.eval_fn(sess, s, rnn_state)
-                    a = np.argmax(a_mcts)
-
                     # Create step
                     try:
+                        # a is a vector of probabilities for actions
+                        a_mcts, a = mcts.search(self.searches)
+                        a_pol, v, rnn_state = self.eval_fn(sess, s, rnn_state)
                         s1, r, done, _ = self.env.step(a)
                     except Exception as e:
                         self.env._store = True
                         self.env.terminate('episode count: ' + str(episode_count))
+                        print('Error in worker {}, is done: {}, mcts root done: {}'.format(self.name, done, mcts.root.done))
+                        # TODO: Post cur state vs mcts root state
+                        x_state = State(new_matrix_to_state(reshape_back(s, 20, 20), 20))
+                        y_state = State(new_matrix_to_state(reshape_back(mcts.root.state, 20, 20), 20))
+                        save_state_diff(x_state=x_state, y_state_act=y_state)
                         raise e
 
                     if done:
@@ -150,9 +154,6 @@ class Worker:
                 self.episode_rewards.append(episode_reward)
                 self.episode_lengths.append(episode_step_count)
                 self.episode_mean_values.append(np.mean(episode_values))
-
-                if self.use_mcts:
-                    mcts.terminate()
 
                 # Update the network using the episode buffer at the end of the episode.
                 if len(episode_buffer) is not 0:
@@ -214,14 +215,14 @@ class Worker:
         self.batch_rnn_state = rnn_state
 
         t = 0
-        mcts = MCTS(s, 0, self.env.copy(), NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size, store_mcts,
+        mcts = MCTS(s, 0, NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size, store_mcts,
                     worker_name=self.name)
 
         while not done and t < 100:
-            a_mcts = mcts.search(self.searches, episode_count, t)
+            a_mcts, a = mcts.search(self.searches, episode_count, t)
             _, v, rnn_state = self.eval_fn(sess, s, rnn_state)
 
-            s, r, done, _ = play_env.step(a_mcts)
+            s, r, done, _ = play_env.step(a)
             s = process_frame(s, self.s_size)
             t += 1
 

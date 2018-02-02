@@ -1,6 +1,8 @@
 import numpy as np
 import env.MatrixIndex as INDEX
 import env.NewMatrixIndex as NEW_INDEX
+import helper
+import env.Env
 from env.expert_moves import State
 
 
@@ -123,3 +125,158 @@ def matrix_to_state(matrix, dimensions):
 def old_matrix_to_new_matrix(matrix, dimensions):
     state = State(matrix_to_state(matrix, dimensions))
     return new_state_to_matrix(state, dimensions)
+
+
+def apply_action(state, action, action_list):
+    state = helper.reshape_back(state, 20, 20)
+    state, success = modify_state(state, action_list[action])
+
+    done = True
+    for row in range(20):
+        for col in range(20):
+            if state[row, col] == NEW_INDEX.GoalA or state[row, col] == NEW_INDEX.AgentAtGoalA:
+                done = False
+                break
+
+    return helper.process_frame(state, 20*20), success, done
+
+
+def modify_state(state, action_str):
+    for row in range(20):
+        for col in range(20):
+            if state[row, col] == NEW_INDEX.Agent or state[row, col] == NEW_INDEX.AgentAtGoalA:
+                # Found agent, apply actions
+
+                agent_field, box_field = get_affected_fields(action_str, row, col)
+
+                if 'MOVE' in action_str:
+                    state, success = move_action(state, agent_field, box_field)
+                    if success:
+                        # Update the current agent location
+                        agent_field_after = NEW_INDEX.GoalA if state[row, col] == NEW_INDEX.AgentAtGoalA else NEW_INDEX.Field
+                        state[row, col] = agent_field_after
+                else:
+                    # Pull action
+                    state, success = pull_action(state, agent_field, box_field)
+
+                    if success:
+                        agent_field_after = NEW_INDEX.BoxA if state[row, col] == NEW_INDEX.Agent else NEW_INDEX.BoxAAtGoalA
+                        state[row, col] = agent_field_after
+
+                return state, success
+
+
+def get_affected_fields(action_str, agent_row, agent_col):
+
+    new_agent_row, new_agent_col = get_row_col(action_str, agent_row, agent_col)
+
+    if 'PULL' in action_str:
+        opposite_dir = get_opposite_dir(action_str)
+        box_row, box_col = get_row_col(opposite_dir, agent_row, agent_col)
+    else:
+        # Move action
+        box_row, box_col = get_row_col(action_str, new_agent_row, new_agent_col)
+
+    return (new_agent_row, new_agent_col), (box_row, box_col)
+
+
+def get_row_col(action_str, row, col):
+
+    if 'NORTH' in action_str:
+        return row - 1, col
+
+    if 'SOUTH' in action_str:
+        return row + 1, col
+
+    if 'EAST' in action_str:
+        return row, col + 1
+
+    if 'WEST' in action_str:
+        return row, col - 1
+
+
+def get_opposite_dir(action_str):
+    if 'NORTH' in action_str:
+        return 'SOUTH'
+
+    if 'SOUTH' in action_str:
+        return 'NORTH'
+
+    if 'EAST' in action_str:
+        return 'WEST'
+
+    if 'WEST' in action_str:
+        return 'EAST'
+
+
+def move_action(state, new_agent_field, new_box_field):
+    # return new state, success (done check is conducted after)
+    new_agent_field_content = state[new_agent_field[0], new_agent_field[1]]
+
+    if new_agent_field_content == NEW_INDEX.Field:
+        state[new_agent_field[0], new_agent_field[1]] = NEW_INDEX.Agent
+        return state, True
+
+    if new_agent_field_content == NEW_INDEX.GoalA:
+        state[new_agent_field[0], new_agent_field[1]] = NEW_INDEX.AgentAtGoalA
+        return state, True
+
+    if new_agent_field_content == NEW_INDEX.BoxA or new_agent_field_content == NEW_INDEX.BoxAAtGoalA:
+        new_agent_field_after = NEW_INDEX.Agent if new_agent_field_content == NEW_INDEX.BoxA else NEW_INDEX.AgentAtGoalA
+
+        new_box_field_content = state[new_box_field[0], new_box_field[1]]
+
+        if new_box_field_content == NEW_INDEX.Field:
+            state[new_box_field[0], new_box_field[1]] = NEW_INDEX.BoxA
+            state[new_agent_field[0], new_agent_field[1]] = new_agent_field_after
+            return state, True
+
+        if new_box_field_content == NEW_INDEX.GoalA:
+            state[new_box_field[0], new_box_field[1]] = NEW_INDEX.BoxAAtGoalA
+            state[new_agent_field[0], new_agent_field[1]] = new_agent_field_after
+            return state, True
+
+    # Else, it failed
+    return state, False
+
+
+def pull_action(state, new_agent_field, box_field):
+    box_field_content = state[box_field[0], box_field[1]]
+    new_agent_field_content = state[new_agent_field[0], new_agent_field[1]]
+
+    field_has_box = box_field_content == NEW_INDEX.BoxA or box_field_content == NEW_INDEX.BoxAAtGoalA
+    a_field_is_free = new_agent_field_content == NEW_INDEX.Field or new_agent_field_content == NEW_INDEX.GoalA
+    if field_has_box and a_field_is_free:
+        # success
+        box_cont_after = NEW_INDEX.Field if box_field_content == NEW_INDEX.BoxA else NEW_INDEX.GoalA
+        agent_cont_after = NEW_INDEX.Agent if new_agent_field_content == NEW_INDEX.Field else NEW_INDEX.AgentAtGoalA
+
+        state[new_agent_field[0], new_agent_field[1]] = agent_cont_after
+        state[box_field[0], box_field[1]] = box_cont_after
+        return state, True
+
+    return state, False
+
+
+def validate_transition(x_state, y_state, action):
+    x_state_state = State(new_matrix_to_state(old_matrix_to_new_matrix(x_state, 20),20))
+    x_state = helper.process_frame(old_matrix_to_new_matrix(x_state, 20), 400)
+    y_state = helper.process_frame(old_matrix_to_new_matrix(y_state, 20), 400)
+
+    state, success, done = apply_action(x_state, action, Env.get_action_meanings())
+
+    equal = np.array_equal(state, y_state)
+
+    act_state = State(new_matrix_to_state(helper.reshape_back(state, 20, 20), 20))
+
+    return act_state, x_state_state, equal
+
+
+
+
+
+
+
+
+
+

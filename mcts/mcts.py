@@ -7,11 +7,10 @@ from mcts.node import Node
 
 
 class MCTS:
-    def __init__(self, state, max_steps, game_env, network_wrapper, s_size, store_mcts=False, scalar=1 / math.sqrt(2.0),
+    def __init__(self, state, max_steps, network_wrapper, s_size, store_mcts=False, scalar=1 / math.sqrt(2.0),
                  worker_name='default'):
-        self.root = Node(state, game_env, network_wrapper, s_size)
+        self.root = Node(state, network_wrapper, s_size)
         self.max_steps = max_steps
-        self.game_env = game_env
         self.network_wrapper = network_wrapper
         self.scalar = scalar
         self.store_mcts = store_mcts
@@ -41,21 +40,16 @@ class MCTS:
         best_action = np.argmax(action_dist)
 
         new_root = list(filter(lambda child: child.action == best_action, self.root.children))[0]
-        new_root.parent = None
 
-        print(action_dist)
-        print('Best action selected: {}'.format(best_action))
-        print('New root: {}'.format(new_root.id))
-        print('Leaves: {}'.format(len(self.leaves)))
+        # print(action_dist)
+        # print('Best action selected: {}'.format(best_action))
+        # print('New root: {}'.format(new_root.id))
+        # print('Leaves: {}'.format(len(self.leaves)))
 
         # The new root must have the new environment
-        self.root.game_env.step(new_root.action)
-        new_root.game_env = self.root.game_env
+        self.replace_root(new_root)
 
-        self._terminate_leaves(new_root.id)
-        self.root = new_root
-
-        return action_dist
+        return action_dist, best_action
 
     # The goal is to either expand the node, or to select the best child of the node. Only applicable to the root
     def select(self):
@@ -67,9 +61,10 @@ class MCTS:
         if not self.root.fully_expanded():
             try:
                 nodes = self.root.expand_all()
-            except TypeError:
+            except TypeError as e:
                 print('Root children: {}, root id: {}, # root parents: {}, has parent: {}'.format(
                     len(self.root.children), self.root.id, len(self.root.parent_ids), self.root.parent is not None))
+                print(e)
                 exit(0)
 
             self.leaves.pop(self.root.id, None)
@@ -140,21 +135,18 @@ class MCTS:
     #
     #     return state, done
 
-    def _terminate_leaves(self, new_root_id=None):
+    def replace_root(self, new_root):
+        self._terminate_leaves(new_root.id)
+        new_root.parent = None
+        self.root = new_root
+
+    def _terminate_leaves(self, new_root_id):
         leaves = list(self.leaves.values())
         for leaf in leaves:
-            if new_root_id is None:
-                leaf.terminate_env()
-                continue
-            elif new_root_id not in leaf.parent_ids and new_root_id is not leaf.id:
+            if new_root_id not in leaf.parent_ids and new_root_id is not leaf.id:
                 self.leaves.pop(leaf.id, None)
-                leaf.terminate_env()
 
             leaf.parent_ids.remove(self.root.id)
-
-    def terminate(self):
-        self.root.terminate_env()
-        self._terminate_leaves()
 
     def draw(self, file_name):
         content = ['digraph {', 'node [rx=5 ry=5 labelStyle="font: 300 14px Helvetica"]',
