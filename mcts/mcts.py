@@ -33,7 +33,11 @@ class MCTS:
                 self.backpropagate(front, value)
 
         if self.store_mcts:
-            self.draw('{}/{}_mcts_tree_{}.txt'.format(self.tree_path, episode, step))
+            try:
+                self.draw('{}/{}_mcts_tree_{}.txt'.format(self.tree_path, episode, step))
+            except RecursionError:
+                print('Tree too big to draw using recursion')
+                self.store_mcts = False
 
         # Select best child and update new root
         action_dist = self.root.get_action_dist()
@@ -72,7 +76,7 @@ class MCTS:
             best_leaf = self.best_child(self.leaves.values())
 
             if best_leaf is None:
-                print('Leaves: {}, root children: {}'.format(len(self.leaves), len(self.root.children)))
+                print('Leaves: {}, root children: {}, root done: {}'.format(len(self.leaves), len(self.root.children), self.root.done))
 
             # Pop the child from the dict
             self.leaves.pop(best_leaf.id, None)

@@ -102,6 +102,10 @@ class Worker:
                 mcts = MCTS(s, 0, NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size,
                             worker_name=self.name)
 
+                # print('PRE: Worker {}, is done: {}, mcts root done: {}, numpy equal (root vs s): {}'
+                #       .format(self.name, done, mcts.root.done,
+                #               np.array_equal(process_frame(s, self.s_size), mcts.root.state)))
+
                 while not done and episode_step_count < max_episode_length:
                     if self.use_mcts and not self.explore_self:
                         print('The worker should be set to explore self when using MCTS. Terminating...')
@@ -109,19 +113,36 @@ class Worker:
 
                     # Create step
                     try:
+
+                        # Post error to server
                         # a is a vector of probabilities for actions
                         a_mcts, a = mcts.search(self.searches)
                         a_pol, v, rnn_state = self.eval_fn(sess, s, rnn_state)
                         s1, r, done, _ = self.env.step(a)
+
+                        # print('Worker {}, is done: {}, mcts root done: {}, numpy equal (root vs s1): {}'
+                        #       .format(self.name, done, mcts.root.done,
+                        #               np.array_equal(process_frame(s1, self.s_size), mcts.root.state)))
+
+                        if not np.array_equal(process_frame(s1, self.s_size), mcts.root.state):
+                            print('raising not equal error')
+                            raise TypeError
+
                     except Exception as e:
                         self.env._store = True
                         self.env.terminate('episode count: ' + str(episode_count))
-                        print('Error in worker {}, is done: {}, mcts root done: {}'.format(self.name, done, mcts.root.done))
-                        # TODO: Post cur state vs mcts root state
-                        x_state = State(new_matrix_to_state(reshape_back(s, 20, 20), 20))
-                        y_state = State(new_matrix_to_state(reshape_back(mcts.root.state, 20, 20), 20))
-                        save_state_diff(x_state=x_state, y_state_act=y_state)
-                        raise e
+
+                        print('Error in worker {}, is done: {}, mcts root done: {}, numpy equal (root vs s): {}'
+                              .format(self.name, done, mcts.root.done, np.array_equal(s, mcts.root.state)))
+                        print('MCTS: root children: {}'.format(mcts.root.children))
+                        # Post error to server
+                        x_state = new_matrix_to_state(reshape_back(s, 20, 20), 20)
+                        y_state_act = new_matrix_to_state(reshape_back(mcts.root.state, 20, 20), 20)
+                        y_state_exp = new_matrix_to_state(s1, 20), 20
+                        save_state_diff(x_state=x_state, y_state_act=y_state_act, y_state_exp=y_state_exp, act_r=mcts.root.done, exp_r=done)
+                        print(e)
+                        # Terminate game and repeat
+                        break
 
                     if done:
                         print('Episode: {} Steps: {} Worker: {} Reward: {} : COMPLETED'.format(episode_count,

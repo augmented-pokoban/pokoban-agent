@@ -5,6 +5,7 @@ from env.Env import Env
 from helper import process_frame
 import math
 import uuid
+import numpy as np
 
 
 class Node:
@@ -21,7 +22,6 @@ class Node:
         self.action = action
         self.child_actions = set()
         self.unexplored_actions = list(range(Env.get_action_count()))
-        shuffle(self.unexplored_actions)
         self.p_a, _ = self.eval()
         self.done = done
         self.depth = 0
@@ -54,8 +54,12 @@ class Node:
         while any(self.unexplored_actions):
 
             action = self.unexplored_actions.pop()
-            state, success, done = mapper.apply_action(self.state, action, Env.get_action_meanings())
+            state, success, done = mapper.apply_action(np.copy(self.state), action, Env.get_action_meanings())
             if success:
+
+                if np.array_equal(state, self.state):
+                    print('root state and state should not be equal here. success: {}'.format(success))
+
                 if not self.network_wrapper.has_running():
                     self.network_wrapper.eval(self.state)
 

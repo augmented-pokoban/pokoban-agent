@@ -131,14 +131,18 @@ def apply_action(state, action, action_list):
     state = helper.reshape_back(state, 20, 20)
     state, success = modify_state(state, action_list[action])
 
-    done = True
+    done = completed(state)
+
+    return helper.process_frame(state, 20*20), success, done
+
+
+def completed(state):
     for row in range(20):
         for col in range(20):
             if state[row, col] == NEW_INDEX.GoalA or state[row, col] == NEW_INDEX.AgentAtGoalA:
-                done = False
-                break
+                return False
 
-    return helper.process_frame(state, 20*20), success, done
+    return True
 
 
 def modify_state(state, action_str):
