@@ -7,6 +7,7 @@ import json
 from env.expert_moves import State, Transition
 
 base_url = 'http://localhost:5000/api/'
+map_difficulty = 'supereasy'
 # base_url = 'http://pokoban-server.azurewebsites.net/api/'
 
 
@@ -18,6 +19,7 @@ def get_unsupervised_map_list(last_id=None, take=10000):
     params = dict()
     params['skip'] = 0
     params['limit'] = take
+    params['difficulty'] = map_difficulty
 
     if last_id is not None:
         params['last_id'] = last_id

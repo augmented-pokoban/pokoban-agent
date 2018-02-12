@@ -125,9 +125,15 @@ class Env:
             response = api.get_expert_list(self._last_id, take=take, order='asc')
             maps = list(map(lambda expert_games: expert_games['fileRef'], response['data']))
 
-        self._last_id = response['data'][-1]['_id']
-        self._id_store.write_id(self._last_id)
-        self._has_more = len(response['data']) == take
+        if any(response['data']):
+            self._last_id = response['data'][-1]['_id']
+            self._id_store.write_id(self._last_id)
+            self._has_more = True
+        else:
+            print('Resetting ID store for worker {}'.format(self._id_store.name))
+            self._last_id = '0000000000000'
+            return self._load_maps(take)
+
         return maps
 
     @staticmethod
