@@ -2,7 +2,7 @@ import numpy as np
 import env.MatrixIndex as INDEX
 import env.NewMatrixIndex as NEW_INDEX
 import helper
-import env.Env
+from env.Env import Env
 from env.expert_moves import State
 
 

@@ -1,8 +1,8 @@
 import sys
 
-from env.mapper import *
 from random import shuffle
 import env.api as api
+from env import mapper
 from env.expert_moves import ExpertMoves
 from support.last_id_store import IdStore
 
@@ -67,7 +67,7 @@ class Env:
             initial = self._map.initial
 
         self._store = store
-        return new_state_to_matrix(initial, initial.dims)
+        return mapper.new_state_to_matrix(initial, initial.dims)
 
     def get_expert_action_value(self):
         if self._use_server:
@@ -91,7 +91,7 @@ class Env:
             # important to increment AFTER transition is extracted
             self._cur_action += 1
 
-        return new_state_to_matrix(transition.state,
+        return mapper.new_state_to_matrix(transition.state,
                                    transition.state.dims), transition.reward, transition.done, transition.success
 
     def terminate(self, description=''):

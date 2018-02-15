@@ -1,13 +1,14 @@
 from autoencoder.EncoderData import DataLoader, batch_to_lists
 from autoencoder.EncoderNetwork import EncoderNetwork
-from env import api
-from env.Env import Env, matrix_to_state, State, new_matrix_to_state
+from env.Env import Env
+from env.mapper import new_matrix_to_state
 import tensorflow as tf
 import numpy as np
 
 from helper import reshape_back
+from support.post_state_diff import save_state_diff
 
-batch_size = 64
+batch_size = 20
 height = 20
 width = 20
 depth = 1
@@ -16,9 +17,9 @@ a_size = len(Env.get_action_meanings())  # Agent can move in many directions
 r_size = len(Env.get_reward_meanings())  # number of different types of rewards we can get
 f_size = 7
 
-data = DataLoader('../data.csv', batch_size, '../batches/')
+data = DataLoader('../data_test.csv', batch_size, '../batches/')
 
-model_path = '../encoder_model_v1'
+model_path = '../encoder_model_v2'
 
 tf.reset_default_graph()
 trainer = tf.train.RMSPropOptimizer(learning_rate=7e-4, epsilon=0.1, decay=0.99)
@@ -31,7 +32,7 @@ with tf.Session() as sess:
     # sess.run(tf.global_variables_initializer())
 
     # [s_size] in new matrix form for both x_state and exp_state
-    x_state, x_action, exp_state, exp_reward = batch_to_lists(data.get_train(), s_size)
+    x_state, x_action, exp_state, exp_reward, exp_success = batch_to_lists(data.get_train(), s_size)
     y_reward, y_state, y_success = network.eval(x_state, x_action, sess)
 
     for i in range(batch_size):
@@ -45,31 +46,17 @@ with tf.Session() as sess:
         # print(y_state.shape)
         # print(diff.shape)
 
-        # missing = exp_state - y_state
-        # missing = np.clip(missing, 0, 1)
-        #
-        # overfit = y_state - exp_state
-        # overfit = np.clip(overfit, 0, 1)
-        print(exp_reward)
-        result = dict()
-        exp_r = exp_reward[i]
+        exp_r = exp_reward[i, 0]
 
-        # y_reward = np.argmax(y_reward[0][i])
-        print(np.sum(diff))
+        save_state_diff(exp_r=Env.get_reward_meanings()[exp_r],
+                        act_r=Env.get_reward_meanings()[np.argmax(y_reward[i])],
+                        diff=new_matrix_to_state(reshape_back(diff, height, width), 20),
+                        errors=np.sum(diff),
+                        x_state=new_matrix_to_state(reshape_back(x_state[i], height, width), 20),
+                        y_state_exp=new_matrix_to_state(reshape_back(exp_state[i], height, width), 20),
+                        y_state_act=new_matrix_to_state(reshape_back(y_state[i], height, width), 20),
+                        action=x_action[i, 0],
+                        success=bool(exp_success[i, 0] == np.argmax(y_success[i]))
+                        )
 
-        result['errors'] = np.sum(diff)
-        # result['missing_errors'] = np.sum(missing)
-        # result['overfit_errors'] = np.sum(overfit)
-        result['x_state'] = new_matrix_to_state(reshape_back(x_state[i], height, width), 20)
-        result['y_state_exp'] = new_matrix_to_state(reshape_back(exp_state[i], height, width), 20)
-        result['y_state_eval'] = new_matrix_to_state(reshape_back(y_state[i], height, width), 20)
-        result['diff'] = new_matrix_to_state(reshape_back(diff, height, width), 20)
-        result['y_reward_exp'] = Env.get_reward_meanings()[exp_r]
-        # result['y_reward_eval'] = Env.get_reward_meanings()[y_reward]
-        result['action'] = Env.get_action_meanings()[x_action[i, 0]]
-        # result['success'] = bool(exp_reward == y_reward)
-        # result['missing'] = matrix_to_state(reshape_back(missing, height, width, depth), 20)
-        # result['overfit'] = matrix_to_state(reshape_back(overfit, height, width, depth), 20)
-
-        api.post_encoding(result)
         print('Submitted {}'.format(i + 1))

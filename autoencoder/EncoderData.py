@@ -13,12 +13,12 @@ from env.mapper import old_matrix_to_new_matrix
 
 class EncoderData():
     def __init__(self, state_x, action, state_y, reward, success, done):
-        self.state_x = state_x
-        self.action = action
-        self.state_y = state_y
-        self.reward = reward
-        self.success = success
-        self.done = done
+        self.state_x = state_x  # old batches is stored as old matrix, random moves are stored as flattened new matrix
+        self.action = action  # The index of the action
+        self.state_y = state_y  # old batches is stored as old matrix, random moves are stored as flattened new matrix
+        self.reward = reward  # The index of the reward
+        self.success = success  # true/false
+        self.done = done  # true/false
 
 
 def save_object(obj, filename):
@@ -49,6 +49,18 @@ def batch_to_lists(batch, s_size):
     return x_state, x_action, y_state, y_reward, y_success
 
 
+def batch_to_lists_preprocessed(batch, s_size):
+    x_state = np.array(
+        list(map(lambda encoded_data: encoded_data.state_x, batch)))  # image biartch
+    x_action = np.array(list(map(lambda encoded_data: [encoded_data.action], batch)))  # action batch
+    y_state = np.array(
+        list(map(lambda encoded_data: encoded_data.state_y, batch)))  # target state batch
+    y_reward = np.array(list(map(lambda encoded_data: [encoded_data.reward] if not encoded_data.done else [3], batch)))  # target reward batch
+    y_success = np.array(list(map(lambda encoded_data: [1 if encoded_data.success else 0], batch)))
+
+    return x_state, x_action, y_state, y_reward, y_success
+
+
 class DataLoader():
 
     def __init__(self, metadata_file, batch_size, batch_path, skip_train=0):
@@ -56,6 +68,7 @@ class DataLoader():
         # Assign files to train, test and validation
         self._cur_train = None
         self._cur_test = None
+        self._cur_val = None
         self._batch_size = batch_size
         self._batch_path = batch_path
 
@@ -77,23 +90,27 @@ class DataLoader():
         if self._cur_test is None or not any(self._cur_test):
             self._cur_test = self._load_batches(self._test, 'TEST')
 
-        return self._cur_test.pop()
+        return self._cur_test.pop() if self._cur_test is not None else None
+
+    def get_val(self):
+        if self._cur_val is None or not any(self._cur_val):
+            self._cur_val = self._load_batches(self._val, 'VAL')
+
+        return self._cur_val.pop() if self._cur_val is not None else None
 
     def _filter_data(self, start, end, k_folds):
         return list(map(lambda row: row['file'], filter(lambda row: start <= int(row['k']) <= end, k_folds)))
 
     def _load_batches(self, file_set, data_set_name):
-        print('loading new set of batches for ' + data_set_name + ': ', end='')
+        # print('loading new set of batches for ' + data_set_name + ': ', end='')
         batches = []
 
-        if data_set_name is 'TEST':
-            next_file = random.choice(file_set)
-        elif not any(file_set):
+        if not any(file_set):
             return None
         else:
             next_file = file_set.pop()
 
-        print(next_file)
+        # print(next_file)
 
         data_set = load_object(self._batch_path + next_file)
 
