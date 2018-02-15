@@ -98,11 +98,14 @@ class DataLoader():
 
         return self._cur_val.pop() if self._cur_val is not None else None
 
+    def has_val(self):
+        return any(self._val)
+
     def _filter_data(self, start, end, k_folds):
         return list(map(lambda row: row['file'], filter(lambda row: start <= int(row['k']) <= end, k_folds)))
 
     def _load_batches(self, file_set, data_set_name):
-        # print('loading new set of batches for ' + data_set_name + ': ', end='')
+        print('loading new set of batches for ' + data_set_name + ': ', end='')
         batches = []
 
         if not any(file_set):
@@ -110,7 +113,7 @@ class DataLoader():
         else:
             next_file = file_set.pop()
 
-        # print(next_file)
+        print(next_file)
 
         data_set = load_object(self._batch_path + next_file)
 

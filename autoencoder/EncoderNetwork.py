@@ -95,7 +95,7 @@ class EncoderNetwork:
                                                 biases_initializer=None)
 
             # Loss functions - mean squared error
-            self.encoding_loss = tf.reduce_mean(tf.squared_difference(self.encoding, self.enc_target))
+            self.encoding_loss = tf.reduce_mean(tf.squared_difference(self.encoding, self.enc_target), axis=1)
             self.value_loss = tf.reduce_mean(tf.squared_difference(self.value, self.val_target))
             self.success_loss = tf.reduce_mean(tf.squared_difference(self.success, self.suc_target))
 
@@ -147,6 +147,17 @@ class EncoderNetwork:
         )
 
         return test_enc_loss, test_val_loss, test_suc_loss
+
+    def eval_test(self, x_state, x_action, y_state, sess):
+        feed_dict = {
+            self.input_image: x_state,
+            self.action: x_action,
+            self.enc_target: y_state
+        }
+
+        val, y, mse = sess.run([self.value, self.encoding_rounded, self.encoding_loss], feed_dict=feed_dict)
+
+        return val, y, mse
 
     def eval(self, x_state, x_action, sess):
         feed_dict = {
