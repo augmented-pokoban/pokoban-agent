@@ -64,8 +64,7 @@ class EncoderNetwork:
                                                weights_initializer=normalized_columns_initializer(0.5),
                                                biases_initializer=None)
 
-            self.encoding = tf.clip_by_value(self.enc_fc, 0, 6)
-            self.encoding_rounded = tf.round(self.encoding)
+            self.encoding_rounded = tf.round(tf.clip_by_value(self.enc_fc, 0, 6))
 
             # value = reward
             self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
@@ -94,15 +93,25 @@ class EncoderNetwork:
                                                 weights_initializer=normalized_columns_initializer(0.01),
                                                 biases_initializer=None)
 
-            # Loss functions - mean squared error
-            self.encoding_loss = tf.reduce_mean(tf.squared_difference(self.encoding, self.enc_target))
+            self.encoding = tf.nn.softmax(self.enc_fc)
+
+            # Loss functions
+            self.encoding_loss = tf.reduce_mean(
+                -tf.reduce_sum(
+                    self.enc_fc * tf.log(
+                        tf.clip_by_value(tf.nn.softmax(self.enc_target), 1e-15, 100)  # we don't want 0 values
+                    ),
+                    axis=1
+                )
+            )
+
             self.value_loss = tf.reduce_mean(tf.squared_difference(self.value, self.val_target))
             self.success_loss = tf.reduce_mean(tf.squared_difference(self.success, self.suc_target))
 
             self.value_loss = tf.reduce_mean(tf.square(self.value - self.val_target))
             self.encoding_loss_rounded = tf.reduce_mean(tf.squared_difference(self.encoding_rounded, self.enc_target))
 
-            self.loss = self.encoding_loss + self.value_loss + self.success_loss
+            self.loss = self.encoding_loss
 
             self.train_op = trainer.minimize(self.loss)
 
