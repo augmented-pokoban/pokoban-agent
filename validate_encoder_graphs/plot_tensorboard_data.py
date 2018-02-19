@@ -1,55 +1,43 @@
 import plotly.offline as py
 import plotly.graph_objs as go
-import numpy as np
+import pandas as pd
 
-from autoencoder.EncoderData import load_object
+test = pd.read_csv('encoder_test.csv')
+train = pd.read_csv('encoder_train.csv')
 
-# data = load_object('mse_data.pkl.zip')
-mse_data = load_object('mse_data.pkl.zip')
+print(test)
 
-mean_data = np.mean(mse_data, axis=1)
+x_test = test['Step'].values.tolist()
+y_test = test['Value'].values.tolist()
+x_train = train['Step'].values.tolist()
+y_train = train['Value'].values.tolist()
 
 
-x_axis = []
-y_axis = [y for x in mse_data for y in x]
-
-for i in range(5):
-    # create range
-    x_axis += [i + 1] * len(mse_data[i])
-
-trace_mse = go.Scatter(
-    x=x_axis,
-    y=y_axis,
-    mode='markers',
-    name='MSE'
+trace_test = go.Scatter(
+    x=x_test,
+    y=y_test,
+    name='Test'
 )
 
-mean_x = [x for x in range(1, 6)]
+trace_train = go.Scatter(
+    x=x_train,
+    y=y_train,
+    name='Train',
 
-print(mean_x)
-
-trace_mean = go.Scatter(
-    x=mean_x,
-    y=mean_data,
-    name='MSE average'
 )
 
-data = [trace_mse, trace_mean]
+data = [trace_test, trace_train]
 
 layout = go.Layout(
     autosize=False,
     width=800,
     height=500,
     xaxis=dict(
-        title='Rollout step',
+        title='Episode',
         titlefont=dict(
             size=18,
             color='darkgrey'
         ),
-        autotick=False,
-        ticks='outside',
-        tick0=0,
-        dtick=1,
         tickfont=dict(
             size=16,
             color='black'
@@ -61,8 +49,8 @@ layout = go.Layout(
             size=18,
             color='darkgrey'
         ),
+        dtick=0.05,
         range=[0.0,0.4],
-        dtick=0.1,
         tickfont=dict(
             size=16,
             color='black'
@@ -78,3 +66,4 @@ layout = go.Layout(
 fig = go.Figure(data=data, layout=layout)
 
 py.plot(fig, image='png')
+# py.plot(fig)

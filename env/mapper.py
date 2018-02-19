@@ -2,7 +2,7 @@ import numpy as np
 import env.MatrixIndex as INDEX
 import env.NewMatrixIndex as NEW_INDEX
 import helper
-from env.Env import Env
+from env import Env
 from env.expert_moves import State
 
 
@@ -127,13 +127,20 @@ def old_matrix_to_new_matrix(matrix, dimensions):
     return new_state_to_matrix(state, dimensions)
 
 
-def apply_action(state, action, action_list):
-    state = helper.reshape_back(state, 20, 20)
+def apply_action(state, action, action_list, reshape=True):
+    state = np.copy(state)
+
+    if reshape:
+        state = helper.reshape_back(state, 20, 20)
+
     state, success = modify_state(state, action_list[action])
 
     done = completed(state)
 
-    return helper.process_frame(state, 20*20), success, done
+    if reshape:
+        state = helper.process_frame(state, 20*20)
+
+    return state, success, done
 
 
 def completed(state):

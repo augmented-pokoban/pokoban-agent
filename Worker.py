@@ -236,7 +236,7 @@ class Worker:
         if deterministic:
             a = np.argmax(a_dist)
         else:
-            a = np.random.choice(self.actions)
+            a = np.random.choice(self.actions, p=a_dist[0])
 
         return a, v, rnn_state
 

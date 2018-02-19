@@ -24,7 +24,7 @@ def get_unsupervised_map_list(last_id=None, take=10000):
     if last_id is not None:
         params['last_id'] = last_id
 
-    return get_request('levels/supervised', params)
+    return get_request('levels/unsupervised', params)
 
 
 def get_expert_list(last_id=None, take=1000, order='asc', sort_field='_id'):
