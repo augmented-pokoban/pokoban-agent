@@ -98,7 +98,7 @@ class EncoderNetwork:
             # Loss functions
             self.encoding_loss = tf.reduce_mean(
                 -tf.reduce_sum(
-                    self.enc_fc * tf.log(
+                    self.encoding * tf.log(
                         tf.clip_by_value(tf.nn.softmax(self.enc_target), 1e-15, 100)  # we don't want 0 values
                     ),
                     axis=1
