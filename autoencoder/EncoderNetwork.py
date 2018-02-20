@@ -93,13 +93,13 @@ class EncoderNetwork:
                                                 weights_initializer=normalized_columns_initializer(0.01),
                                                 biases_initializer=None)
 
-            self.encoding = tf.nn.softmax(self.enc_fc)
+            self.encoding = tf.nn.sigmoid(self.enc_fc)
 
             # Loss functions
             self.encoding_loss = tf.reduce_mean(
                 -tf.reduce_sum(
                     self.encoding * tf.log(
-                        tf.clip_by_value(tf.nn.softmax(self.enc_target), 1e-15, 100)  # we don't want 0 values
+                        tf.clip_by_value(tf.nn.sigmoid(self.enc_target), 1e-15, 1)  # we don't want 0 values
                     ),
                     axis=1
                 )
