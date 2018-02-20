@@ -5,7 +5,7 @@ from support.last_id_store import IdStore
 import agent_validation_functions
 import numpy as np
 
-max_episode_length = 100
+max_episode_length = 50
 mcts_budget = 100
 max_plays = 1000
 model_path = './model'
@@ -16,7 +16,7 @@ terminal_data_path = '../data_terminal/goal.pkl.zip'
 
 id_store_supereasy_id = '04b416ab02717de528d83b9f27186e37'
 
-use_mcts = False
+use_mcts = True
 use_bfs = False
 
 run_permutations = True
@@ -25,7 +25,7 @@ run_simple = True
 run_supervised_pred = True
 run_terminal_pred = True
 
-use_integrated_server = True
+use_integrated_server = False
 
 if use_integrated_server:
     if not start_server():

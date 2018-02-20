@@ -15,7 +15,6 @@ class MCTS:
         self.scalar = scalar
         self.store_mcts = store_mcts
         self.tree_path = 'trees/{}'.format(worker_name)
-        self.leaves = dict()
 
         if self.store_mcts and not os.path.exists(self.tree_path):
             os.mkdir(self.tree_path)
@@ -41,6 +40,7 @@ class MCTS:
 
         # Select best child and update new root
         action_dist = self.root.get_action_dist()
+        print('Selecting action from distribution: {}'.format(action_dist.tostring()))
         best_action = np.argmax(action_dist)
 
         new_root = list(filter(lambda child: child.action == best_action, self.root.children))[0]
@@ -62,30 +62,22 @@ class MCTS:
         # 2. Select the best leaf to expand
         # 3. Expand the leaf
 
-        if not self.root.fully_expanded():
-            try:
-                nodes = self.root.expand_all()
-            except TypeError as e:
-                print('Root children: {}, root id: {}, # root parents: {}, has parent: {}'.format(
-                    len(self.root.children), self.root.id, len(self.root.parent_ids), self.root.parent is not None))
-                print(e)
-                exit(0)
+        node = self.root
+        try:
+            while node.fully_expanded():
+                node_next = self.best_child(node.children)
 
-            self.leaves.pop(self.root.id, None)
-        else:
-            best_leaf = self.best_child(self.leaves.values())
+                if node_next is None:
+                    break
 
-            if best_leaf is None:
-                print('Leaves: {}, root children: {}, root done: {}'.format(len(self.leaves), len(self.root.children), self.root.done))
+                node = node_next
 
-            # Pop the child from the dict
-            self.leaves.pop(best_leaf.id, None)
-            nodes = best_leaf.expand_all()
+        except AttributeError:
+            print('error found')
 
-        for node in nodes:
-            self.leaves[node.id] = node
+        children = node.expand_all()
 
-        return nodes
+        return children
 
     def best_child(self, children):
         # best_score = 1e-5
@@ -140,17 +132,17 @@ class MCTS:
     #     return state, done
 
     def replace_root(self, new_root):
-        self._terminate_leaves(new_root.id)
+        # self._terminate_leaves(new_root.id)
         new_root.parent = None
         self.root = new_root
 
-    def _terminate_leaves(self, new_root_id):
-        leaves = list(self.leaves.values())
-        for leaf in leaves:
-            if new_root_id not in leaf.parent_ids and new_root_id is not leaf.id:
-                self.leaves.pop(leaf.id, None)
-
-            leaf.parent_ids.remove(self.root.id)
+    # def _terminate_leaves(self, new_root_id):
+        # leaves = list(self.leaves.values())
+        # for leaf in leaves:
+        #     if new_root_id not in leaf.parent_ids and new_root_id is not leaf.id:
+        #         self.leaves.pop(leaf.id, None)
+        #
+        #     leaf.parent_ids.remove(self.root.id)
 
     def draw(self, file_name):
         content = ['digraph {', 'node [rx=5 ry=5 labelStyle="font: 300 14px Helvetica"]',

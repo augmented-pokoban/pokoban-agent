@@ -49,6 +49,7 @@ class Node:
         """
 
         if self.done:
+            self.unexplored_actions = []
             return [self]
 
         while any(self.unexplored_actions):
