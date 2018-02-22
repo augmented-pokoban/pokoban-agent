@@ -100,8 +100,7 @@ class Worker:
                     if self.explore_self:
                         a, v, rnn_state = self.eval_fn(sess, s, rnn_state)
                     else:
-                        _, v, rnn_state = self.eval_fn(sess, s, rnn_state)
-                        a, _ = self.env.get_expert_action_value()
+                        a, v = self.env.get_expert_action_value()
 
                     # Create step
                     try:
