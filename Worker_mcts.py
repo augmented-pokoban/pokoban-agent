@@ -1,14 +1,11 @@
 import sys
 
-import numpy as np
-
 from Network_mcts import *
-from env.Env import Env, new_matrix_to_state, State
-from helper import update_target_graph, discount, process_frame, reshape_back
+from env.Env import Env
+from helper import update_target_graph, discount, process_frame
 from mcts.mcts import MCTS
 from mcts.network_wrapper import NetworkWrapper
 from support.last_id_store import IdStore
-from support.post_state_diff import save_state_diff
 from support.stats_object import StatsObject
 
 
@@ -129,20 +126,11 @@ class Worker:
                             raise TypeError
 
                     except Exception as e:
-                        self.env._store = True
-                        self.env.terminate('episode count: ' + str(episode_count))
-
                         print('Error in worker {}, is done: {}, mcts root done: {}, numpy equal (root vs s): {}'
                               .format(self.name, done, mcts.root.done, np.array_equal(s, mcts.root.state)))
                         print('MCTS: root children: {}'.format(mcts.root.children))
-                        # Post error to server
-                        x_state = new_matrix_to_state(reshape_back(s, 20, 20), 20)
-                        y_state_act = new_matrix_to_state(reshape_back(mcts.root.state, 20, 20), 20)
-                        y_state_exp = new_matrix_to_state(s1, 20), 20
-                        save_state_diff(x_state=x_state, y_state_act=y_state_act, y_state_exp=y_state_exp, act_r=mcts.root.done, exp_r=done)
-                        print(e)
-                        # Terminate game and repeat
-                        break
+
+                        raise
 
                     if done:
                         print('Episode: {} Steps: {} Worker: {} Reward: {} : COMPLETED'.format(episode_count,

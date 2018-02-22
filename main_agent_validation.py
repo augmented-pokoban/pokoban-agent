@@ -7,8 +7,8 @@ from support.last_id_store import IdStore
 import agent_validation_functions
 import numpy as np
 
-max_episode_length = 100
-mcts_budget = 50
+max_episode_length = 50
+mcts_budget = 30
 max_plays = 1000
 model_path = './model'
 
@@ -21,7 +21,7 @@ terminal_data_path = '../data_terminal/goal.pkl.zip'
 id_store_supereasy_id = '04b416ab02717de528d83b9f27186e37'
 id_store_supervised_id = '3c5e18630c13c4c4e45ac5abbddf84a4'
 
-use_mcts = False
+use_mcts = True
 use_bfs = False
 use_random_weights = False
 
@@ -35,7 +35,7 @@ run_normal = True
 run_supervised_pred = False
 run_terminal_pred = False
 
-use_integrated_server = True
+use_integrated_server = False
 
 if use_integrated_server:
     if not start_server():

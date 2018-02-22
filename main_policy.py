@@ -20,12 +20,12 @@ depth = 1
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env.get_action_meanings())  # Agent can move in many directions
 load_model = False
-unsupervised = True
+unsupervised = False
 model_path = './model'
 last_id_path = './last_ids'
 num_workers = 1  # multiprocessing.cpu_count()  # Set workers ot number of available CPU threads
 use_integrated_server = False
-map_difficulty = 'permutations'
+map_difficulty = 'simple'
 
 api.map_difficulty = map_difficulty
 

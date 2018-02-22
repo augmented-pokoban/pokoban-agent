@@ -44,6 +44,9 @@ class MCTS:
                 print('Tree too big to draw using recursion')
                 self.store_mcts = False
 
+        if not any(self.root.children):
+            print('what the hell')
+
         # Select best child and update new root
         action_dist = self.root.get_action_dist()
         best_action = np.argmax(action_dist)
