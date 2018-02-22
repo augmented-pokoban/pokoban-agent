@@ -21,15 +21,21 @@ class MCTS:
 
     def search(self, budget, episode=0, step=0):
         count = 0
+        count_loops = 0
 
         while count < budget:
+
             frontier = self.select()
             count += len(frontier)
-            # print('Frontier len: {}, leaves length: {}, count: {}'.format(len(frontier), len(leaves), count))
+
+            if count_loops > budget:
+                print('Frontier len: {}, count: {}'.format(len(frontier), count))
 
             for front in frontier:
                 value = self.simulate(front)
                 self.backpropagate(front, value)
+
+            count_loops += 1
 
         if self.store_mcts:
             try:
@@ -40,7 +46,6 @@ class MCTS:
 
         # Select best child and update new root
         action_dist = self.root.get_action_dist()
-        print('Selecting action from distribution: {}'.format(action_dist.tostring()))
         best_action = np.argmax(action_dist)
 
         new_root = list(filter(lambda child: child.action == best_action, self.root.children))[0]
@@ -65,10 +70,14 @@ class MCTS:
         node = self.root
         try:
             while node.fully_expanded():
+                if not any(node.children):
+                    # print('Return node because terminal')
+                    return [node]
+
                 node_next = self.best_child(node.children)
 
-                if node_next is None:
-                    break
+                if node_next.depth > 80:
+                    return [node]
 
                 node = node_next
 

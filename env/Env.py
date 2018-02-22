@@ -92,7 +92,7 @@ class Env:
             self._cur_action += 1
 
         return mapper.new_state_to_matrix(transition.state,
-                                   transition.state.dims), transition.reward, transition.done, transition.success
+                                          transition.state.dims), transition.reward, transition.done, transition.success
 
     def terminate(self, description=''):
         # if store is false, there is no active game on the server

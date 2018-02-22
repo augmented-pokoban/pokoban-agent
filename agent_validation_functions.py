@@ -8,10 +8,12 @@ from env.mapper import apply_action
 from helper import process_frame
 import numpy as np
 import tensorflow as tf
+import resource
 
 from mcts.mcts import MCTS
 from mcts.network_wrapper import NetworkWrapper
 from support.BfsNode import BfsNode
+import env.NewMatrixIndex as INDEX
 
 gamma = .99  # discount rate for advantage estimation and reward discounting
 height = 20
@@ -20,6 +22,8 @@ depth = 1
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env.get_action_meanings())  # Agent can move in many directions
 actions = [x for x in range(a_size)]
+action_failure = 0
+action_success = 1
 
 
 def test_levels(difficulty, play_length, model_path, max_tests, id_store):
@@ -39,30 +43,38 @@ def test_levels(difficulty, play_length, model_path, max_tests, id_store):
     completed_steps = []
     success_count = 0
     failure_count = 0
+    compl_factors = []
+    action_results = np.zeros((a_size, 2))  # two outputs for each action
 
     with tf.Session() as sess:
-        print('Loading Model for {}...'.format(difficulty))
-        ckpt = tf.train.get_checkpoint_state(model_path)
-        saver.restore(sess, ckpt.model_checkpoint_path)
+        if model_path is None:
+            sess.run(tf.global_variables_initializer())
+        else:
+            print('Loading Model for {}...'.format(difficulty))
+            ckpt = tf.train.get_checkpoint_state(model_path)
+            saver.restore(sess, ckpt.model_checkpoint_path)
 
         for episode in range(max_tests):
 
             done = False
             s = test_env.reset()
-            s = process_frame(s, s_size)
             t = 0
             while not done and t < play_length:
+                s = process_frame(s, s_size)
                 a, v, rnn_state = eval_fn(sess, s, rnn_state, local_network)
 
                 s, r, done, success = test_env.step(a)
-                s = process_frame(s, s_size)
+
                 t += 1
 
                 if success:
                     success_count += 1
+                    action_results[a, action_success] += 1
                 else:
                     failure_count += 1
+                    action_results[a, action_failure] += 1
 
+            compl_factors.append(completion_factor(s))
 
             # Store data
             if done:
@@ -73,7 +85,24 @@ def test_levels(difficulty, play_length, model_path, max_tests, id_store):
 
     test_env.terminate()
 
-    return completed_count, completed_steps, steps, success_count, failure_count
+    return completed_count, completed_steps, steps, success_count, failure_count, compl_factors, action_results
+
+
+def completion_factor(state):
+    count_goals = 0
+    count_solved_goals = 0
+    for row in range(20):
+        for col in range(20):
+            content = state[row, col]
+
+            if content == INDEX.BoxAAtGoalA:
+                count_solved_goals += 1
+                count_goals += 1
+
+            elif content == INDEX.AgentAtGoalA or content == INDEX.GoalA:
+                count_goals += 1
+
+    return float(count_solved_goals) / float(count_goals)
 
 
 def test_levels_mcts(difficulty, play_length, model_path, max_tests, id_store, budget):
@@ -107,12 +136,20 @@ def test_levels_mcts(difficulty, play_length, model_path, max_tests, id_store, b
             mcts = MCTS(s, 0, NetworkWrapper(sess, rnn_state, eval_fn, local_network), s_size, False,
                         worker_name=difficulty)
             t = 0
-            while not done and t < play_length:
-                _, a = mcts.search(budget)
+            try:
 
-                s, r, done, success = test_env.step(a)
-                s = process_frame(s, s_size)
-                t += 1
+                while not done and t < play_length:
+                    _, a = mcts.search(budget)
+
+                    s, r, done, success = test_env.step(a)
+                    s = process_frame(s, s_size)
+                    t += 1
+
+                print('Episode completed: {}, memory used (kB): {}'.format(episode, resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
+            except:
+                steps.append(play_length)
+                print('Failed evaluation: root equal to prev state: {}'.format(np.array_equal(process_frame(s, s_size), mcts.root.state)))
+                print('Environment done: {}, mcts root done: {}'.format(done, mcts.root.done))
 
             # Store data
             if done:
@@ -200,9 +237,12 @@ def predict_supervised(data_path, model_path, use_mcts=False, mcts_budget=0):
     total_predictions = 0
 
     with tf.Session() as sess:
-        print('Loading Model for Predict Supervised...')
-        ckpt = tf.train.get_checkpoint_state(model_path)
-        saver.restore(sess, ckpt.model_checkpoint_path)
+        if model_path is None:
+            sess.run(tf.global_variables_initializer())
+        else:
+            print('Loading Model for Predict Supervised...')
+            ckpt = tf.train.get_checkpoint_state(model_path)
+            saver.restore(sess, ckpt.model_checkpoint_path)
 
         for episode in range(1000):
 
@@ -259,9 +299,12 @@ def predict_terminal(data_path, model_path, use_mcts=False, mcts_budget=0):
     total_predictions = 0
 
     with tf.Session() as sess:
-        print('Loading Model for Predict Terminal...')
-        ckpt = tf.train.get_checkpoint_state(model_path)
-        saver.restore(sess, ckpt.model_checkpoint_path)
+        if model_path is None:
+            sess.run(tf.global_variables_initializer())
+        else:
+            print('Loading Model for Predict Terminal...')
+            ckpt = tf.train.get_checkpoint_state(model_path)
+            saver.restore(sess, ckpt.model_checkpoint_path)
 
         x_state, x_action, exp_state, exp_reward, exp_success = batch_to_lists(data, s_size)
 
@@ -285,13 +328,13 @@ def predict_terminal(data_path, model_path, use_mcts=False, mcts_budget=0):
                 # do network eval
                 a, _, rnn_state = eval_fn(sess, x_state[episode], rnn_state, local_network, deterministic=True)
 
-                correct_guess = a == x_action[episode, 0]
+            correct_guess = a == x_action[episode, 0]
 
-                # Compare output with expected, tract prediction accuracy
-                if correct_guess:
-                    correct_predictions += 1
+            # Compare output with expected, tract prediction accuracy
+            if correct_guess:
+                correct_predictions += 1
 
-                total_predictions += 1
+            total_predictions += 1
 
         return total_predictions, correct_predictions
 

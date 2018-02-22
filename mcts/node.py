@@ -76,7 +76,6 @@ class Node:
         return self.parent is None
 
     def UBT(self, root_visits, scalar=1 / math.sqrt(2.0)):
-
         exploit = self.value / self.visits
         explore = self.action_prop * math.sqrt(2.0 * math.log(root_visits) / float(self.visits))
         score = exploit + scalar * explore

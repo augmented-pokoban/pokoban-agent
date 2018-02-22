@@ -9,6 +9,7 @@ from env.expert_moves import State, Transition
 base_url = 'http://localhost:5000/api/'
 map_difficulty = 'supereasy'
 # base_url = 'http://pokoban-server.azurewebsites.net/api/'
+level_api = 'unsupervised'
 
 
 def ping_server():
@@ -24,7 +25,7 @@ def get_unsupervised_map_list(last_id=None, take=10000):
     if last_id is not None:
         params['last_id'] = last_id
 
-    return get_request('levels/unsupervised', params)
+    return get_request('levels/{}'.format(level_api), params)
 
 
 def get_expert_list(last_id=None, take=1000, order='asc', sort_field='_id'):
