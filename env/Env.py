@@ -69,12 +69,12 @@ class Env:
         self._store = store
         return mapper.new_state_to_matrix(initial, initial.dims)
 
-    def get_expert_action_value(self):
+    def get_expert_action(self):
         if self._use_server:
             raise Exception('Cannot use server when getting expert actions')
 
         transition = self._map.get_transition(self._cur_action)
-        return self._actions.index(transition.action), self._map.value
+        return self._actions.index(transition.action)
 
     def step(self, action=None):
         if (self._use_server or self._store) and action is None:

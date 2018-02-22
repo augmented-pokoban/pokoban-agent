@@ -33,7 +33,7 @@ while episode < max_episodes:
     _ = env.reset()
 
     while not done:
-        a, v = env.get_expert_action_value()
+        a = env.get_expert_action()
         s, r, done, success = env.step()
 
         actions[a] += 1

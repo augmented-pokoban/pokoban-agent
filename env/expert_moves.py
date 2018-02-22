@@ -1,10 +1,9 @@
 class ExpertMoves:
-
     def __init__(self, mapping):
         self.initial = State(mapping['initial'])
         self.transitions = [Transition(x) for x in mapping['transitions']]
         self.level = mapping['level']
-        self.value = sum(map(lambda trans: trans.reward, self.transitions))
+
 
     def get_transition(self, index):
         if len(self.transitions) == index:
