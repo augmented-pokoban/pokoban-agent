@@ -159,11 +159,11 @@ class Worker:
                 self.episode_mean_values.append(np.mean(episode_values))
 
                 # Update the network using the episode buffer at the end of the episode.
-                if len(episode_buffer) is not 0:
+                if len(episode_buffer) != 0:
                     p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
 
                 # Periodically save model parameters, and summary statistics.
-                if episode_count % 5 == 0 and episode_count is not 0:
+                if episode_count % 5 == 0 and episode_count != 0:
                     if self.name == 'worker_0':
                         print('Episode:', episode_count, 'steps: ', episode_step_count)
 
@@ -174,13 +174,13 @@ class Worker:
                         StatsObject(episode_count, mean_reward, mean_length, mean_value, p_l, e_l, g_n, v_n,
                                     total_levels))
 
-                if episode_count % 100 == 0 and self.name == 'worker_0' and episode_count is not 0:
+                if episode_count % 100 == 0 and self.name == 'worker_0' and episode_count != 0:
                     print('Saved model')
                     store_mcts = episode_count % 100 == 0
                     self.save(saver, sess, episode_count)
                     self.play(sess, episode_count, store_mcts=store_mcts)
 
-                if episode_count % 100 == 0 and episode_count is not 0:
+                if episode_count % 100 == 0 and episode_count != 0:
 
                     for stat in stats:
                         summary = tf.Summary()

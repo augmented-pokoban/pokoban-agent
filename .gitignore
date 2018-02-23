@@ -62,3 +62,4 @@ encoder_model_v1/
 last_ids/
 model/
 trees/
+train_*

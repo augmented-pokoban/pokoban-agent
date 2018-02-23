@@ -9,7 +9,7 @@ from support.stats_object import StatsObject
 
 
 class Worker:
-    def __init__(self, name, dimensions, a_size, trainer, model_path, global_episodes, explore_self=True,
+    def __init__(self, name, dimensions, a_size, trainer, beta, model_path, global_episodes, explore_self=True,
                  use_mcts=False, searches=10):
         self.name = "worker_" + str(name)
         self.number = name
@@ -28,7 +28,7 @@ class Worker:
         self.height, self.width, depth, self.s_size = dimensions
 
         # Create the local copy of the network and the tensorflow op to copy global parameters to local network
-        self.local_AC = Network(self.height, self.width, depth, self.s_size, a_size, self.name, trainer)
+        self.local_AC = Network(self.height, self.width, depth, self.s_size, a_size, self.name, trainer, beta)
         self.update_local_ops = update_target_graph('global', self.name)
 
         # End A3C basic setup
@@ -40,27 +40,32 @@ class Worker:
         observations = rollout[:, 0]
         actions = rollout[:, 1]
         rewards = rollout[:, 2]
-        # next_observations = rollout[:, 3]
+        next_observations = rollout[:, 3]
         values = rollout[:, 5]
 
         # Here we take the rewards and values from the rollout, and use them to
         # generate the advantage and discounted returns.
         # The advantage function uses "Generalized Advantage Estimation"
-        # self.rewards_plus = np.asarray(rewards.tolist() + [bootstrap_value])
-        # discounted_rewards = discount(self.rewards_plus, gamma)[:-1]
+        self.rewards_plus = np.asarray(rewards.tolist() + [bootstrap_value])
+        discounted_rewards = discount(self.rewards_plus, gamma)[:-1]
+
         self.value_plus = np.asarray(values.tolist() + [bootstrap_value])
+
         advantages = rewards + gamma * self.value_plus[1:] - self.value_plus[:-1]
         advantages = discount(advantages, gamma)
 
         # Update the global network using gradients from loss
         # Generate network statistics to periodically save
-        feed_dict = {  # self.local_AC.target_v: discounted_rewards,
+        feed_dict = {
+            self.local_AC.target_v: discounted_rewards,
             self.local_AC.inputs: np.vstack(observations),
             self.local_AC.actions: actions,
             self.local_AC.advantages: advantages,
             self.local_AC.state_in[0]: self.batch_rnn_state[0],
             self.local_AC.state_in[1]: self.batch_rnn_state[1]}
-        p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run([  # self.local_AC.value_loss,
+
+        loss, p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run([  # self.local_AC.value_loss,
+            self.local_AC.loss,
             self.local_AC.policy_loss,
             self.local_AC.entropy,
             self.local_AC.grad_norms,
@@ -68,6 +73,7 @@ class Worker:
             self.local_AC.state_out,
             self.local_AC.apply_grads],
             feed_dict=feed_dict)
+
         return p_l / len(rollout), e_l / len(rollout), g_n, v_n
 
     def work(self, max_episode_length, gamma, sess, coord, saver, max_buffer_length):
@@ -144,11 +150,11 @@ class Worker:
                 self.episode_mean_values.append(np.mean(episode_values))
 
                 # Update the network using the episode buffer at the end of the episode.
-                if len(episode_buffer) is not 0:
+                if len(episode_buffer) != 0:
                     p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
 
                 # Periodically save model parameters, and summary statistics.
-                if episode_count % 5 == 0 and episode_count is not 0:
+                if episode_count % 5 == 0 and episode_count != 0:
                     if self.name == 'worker_0':
                         print('Episode:', episode_count, 'steps: ', episode_step_count)
 
@@ -156,16 +162,16 @@ class Worker:
                     mean_length = np.mean(self.episode_lengths[-5:])
                     mean_value = np.mean(self.episode_mean_values[-5:])
                     stats.append(
-                        StatsObject(episode_count, mean_reward, mean_length, mean_value, p_l, e_l, g_n, v_n,
-                                    total_levels))
+                        StatsObject(episode_count, mean_reward, mean_length, mean_value, p_l, e_l, g_n, v_n, total_levels))
 
-                if episode_count % 100 == 0 and self.name == 'worker_0' and episode_count is not 0:
-                    print('Saved model')
+                if episode_count % 100 == 0 and self.name == 'worker_0' and episode_count != 0:
+                    print('Saving model')
                     self.save(saver, sess, episode_count)
+                    print('Saved model')
                     self.play(sess, episode_count)
 
                 # Periodically save model parameters, and summary statistics.
-                if episode_count % 100 == 0 and episode_count is not 0:
+                if episode_count % 100 == 0 and episode_count != 0:
                     for stat in stats:
                         summary = tf.Summary()
                         summary.value.add(tag='Perf/Reward', simple_value=float(stat.mean_reward))
