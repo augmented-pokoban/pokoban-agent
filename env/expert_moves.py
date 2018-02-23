@@ -4,7 +4,6 @@ class ExpertMoves:
         self.transitions = [Transition(x) for x in mapping['transitions']]
         self.level = mapping['level']
 
-
     def get_transition(self, index):
         if len(self.transitions) == index:
             trans = self.transitions[index-1]
@@ -32,7 +31,6 @@ class Transition:
         self.reward = 10.0 if self.done else transition['reward']
         self.action = transition['action']
         self.state = State(transition['state'])
-
 
 
 class PokobanObject:

@@ -23,7 +23,7 @@ load_model = False
 unsupervised = False
 model_path = './model'
 last_id_path = './last_ids'
-num_workers = 1  # multiprocessing.cpu_count()  # Set workers ot number of available CPU threads
+num_workers = 1  # multiprocessing.cpu_count()  # Set workers to number of available CPU threads
 use_integrated_server = False
 map_difficulty = 'simple'
 
