@@ -66,13 +66,13 @@ class Network():
                 self.responsible_outputs = tf.reduce_sum(self.policy_mcts * self.actions_onehot, [1])
 
                 # Entropy function
-                self.entropy = tf.reduce_sum(self.policy_mcts * tf.log(tf.clip_by_value(self.policy, 1e-15, 1)))
+                self.entropy = -tf.reduce_sum(self.policy_mcts * tf.log(tf.clip_by_value(self.policy, 1e-15, 1)))
 
                 # Loss functions
                 # self.value_loss = tf.reduce_sum(tf.square(self.target_v - tf.reshape(self.value, [-1])))
-                self.policy_loss = tf.reduce_sum(tf.log(self.responsible_outputs + 1e-15) * self.advantages)
+                self.policy_loss = -tf.reduce_sum(tf.log(self.responsible_outputs + 1e-15) * self.advantages)
                 # self.loss = self.value_loss + self.policy_loss - self.entropy * 0.01
-                self.loss = self.policy_loss + self.entropy * 0.01
+                self.loss = self.policy_loss - self.entropy * 0.01
 
                 # Get gradients from local network using local losses
                 local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)

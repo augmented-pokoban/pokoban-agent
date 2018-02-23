@@ -15,20 +15,20 @@ from support.integrated_server import start_server
 max_episode_length = 100
 max_buffer_length = 100
 gamma = .99  # discount rate for advantage estimation and reward discounting
-beta = 0.1  # 0.01
+beta = 0.01  # 0.01
 learning_rate = 7e-4
 height = 20
 width = 20
 depth = 1
 s_size = height * width * depth  # Observations are greyscale frames of 84 * 84 * 1
 a_size = len(Env.get_action_meanings())  # Agent can move in many directions
-load_model = False
+load_model = True
 unsupervised = False
 model_path = './model'
 last_id_path = './last_ids'
 num_workers = multiprocessing.cpu_count()  # Set workers to number of available CPU threads
 use_integrated_server = False
-map_difficulty = 'simple'
+map_difficulty = 'permutations-validation'
 name_of_agent = 'Uns' if unsupervised else 'Sup'
 
 # Used in saved replays
