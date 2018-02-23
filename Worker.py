@@ -202,13 +202,9 @@ class Worker:
         self.batch_rnn_state = rnn_state
 
         t = 0
-        success = True
 
-        while not done and t < 300:
-            if not success:
-                a, v, rnn_state = self.eval_fn(sess, s, rnn_state, deterministic=False)
-            else:
-                a, v, rnn_state = self.eval_fn(sess, s, rnn_state, deterministic=True)
+        while not done and t < 100:
+            a, v, rnn_state = self.eval_fn(sess, s, rnn_state, deterministic=False)
 
             s, r, done, success = play_env.step(a)
             s = process_frame(s, self.s_size)

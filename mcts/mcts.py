@@ -3,7 +3,11 @@ import os
 
 import numpy as np
 
+from env.expert_moves import State
+from env.mapper import new_matrix_to_state
+from helper import reshape_back
 from mcts.node import Node
+from support.post_state_diff import save_state_diff
 
 
 class MCTS:
@@ -45,7 +49,11 @@ class MCTS:
                 self.store_mcts = False
 
         if not any(self.root.children):
-            print('what the hell')
+            # self.root.unexplored_actions = list(range(8))
+            # state = new_matrix_to_state(reshape_back(self.root.state, 20, 20), 20)
+            # save_state_diff(diff=state, x_state=state, y_state_act=state, y_state_exp=state, errors=0)
+            # all = self.root.expand_all()
+            print('Expand failed for root')
 
         # Select best child and update new root
         action_dist = self.root.get_action_dist()
