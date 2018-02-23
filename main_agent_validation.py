@@ -23,7 +23,7 @@ id_store_supervised_id = '3c5e18630c13c4c4e45ac5abbddf84a4'
 
 use_mcts = True
 use_bfs = False
-use_random_weights = False
+use_random_weights = True
 
 if use_random_weights:
     model_path = None

@@ -99,10 +99,6 @@ class Worker:
                 mcts = MCTS(s, 0, NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size,
                             worker_name=self.name)
 
-                # print('PRE: Worker {}, is done: {}, mcts root done: {}, numpy equal (root vs s): {}'
-                #       .format(self.name, done, mcts.root.done,
-                #               np.array_equal(process_frame(s, self.s_size), mcts.root.state)))
-
                 while not done and episode_step_count < max_episode_length:
                     if self.use_mcts and not self.explore_self:
                         print('The worker should be set to explore self when using MCTS. Terminating...')
@@ -110,8 +106,6 @@ class Worker:
 
                     # Create step
                     try:
-
-                        # Post error to server
                         # a is a vector of probabilities for actions
                         a_mcts, a = mcts.search(self.searches)
                         a_pol, v, rnn_state = self.eval_fn(sess, s, rnn_state)
@@ -128,9 +122,9 @@ class Worker:
                     except Exception as e:
                         print('Error in worker {}, is done: {}, mcts root done: {}, numpy equal (root vs s): {}'
                               .format(self.name, done, mcts.root.done, np.array_equal(s, mcts.root.state)))
-                        print('MCTS: root children: {}'.format(mcts.root.children))
+                        print('MCTS: root children: {}: Root could not be expanded'.format(mcts.root.children))
 
-                        raise
+                        break
 
                     if done:
                         print('Episode: {} Steps: {} Worker: {} Reward: {} : COMPLETED'.format(episode_count,
@@ -260,7 +254,7 @@ class Worker:
         elif deterministic:
             a = np.argmax(a_dist)
         else:
-            a = np.random.choice(self.actions)
+            a = np.random.choice(self.actions, p=a_dist[0])
 
         return a, v, rnn_state
 

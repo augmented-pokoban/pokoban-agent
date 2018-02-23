@@ -52,10 +52,10 @@ class Node:
             self.unexplored_actions = []
             return [self]
 
-        while any(self.unexplored_actions):
+        while len(self.unexplored_actions) != 0:
 
             action = self.unexplored_actions.pop()
-            state, success, done = mapper.apply_action(np.copy(self.state), action, Env.get_action_meanings())
+            state, success, done = mapper.apply_action(self.state, action, Env.get_action_meanings())
             if success:
 
                 if np.array_equal(state, self.state):

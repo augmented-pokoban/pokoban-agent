@@ -150,6 +150,7 @@ def test_levels_mcts(difficulty, play_length, model_path, max_tests, id_store, b
                 steps.append(play_length)
                 print('Failed evaluation: root equal to prev state: {}'.format(np.array_equal(process_frame(s, s_size), mcts.root.state)))
                 print('Environment done: {}, mcts root done: {}'.format(done, mcts.root.done))
+                raise
 
             # Store data
             if done:
