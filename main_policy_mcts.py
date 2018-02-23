@@ -26,6 +26,11 @@ model_path = './model'
 last_id_path = './last_ids'
 num_workers = 20 # Set workers ot number of available CPU threads
 use_integrated_server = True
+name_of_agent = 'MCTS_'
+
+# Used in saved replays
+Worker.game_type = name_of_agent
+
 
 tf.reset_default_graph()
 

@@ -10,6 +10,9 @@ from support.stats_object import StatsObject
 
 
 class Worker:
+
+    game_type = 'Default'
+
     def __init__(self, name, dimensions, a_size, trainer, model_path, global_episodes, explore_self=True,
                  use_mcts=False, searches=10):
         self.name = "worker_" + str(name)
@@ -229,7 +232,7 @@ class Worker:
             s = process_frame(s, self.s_size)
             t += 1
 
-        play_env.terminate('episode count: ' + str(episode_count))
+        play_env.terminate('{}: episode count: {}'.format(Worker.game_type, episode_count))
         print('Test trial terminated')
 
     def save(self, saver, sess, episode_count):
