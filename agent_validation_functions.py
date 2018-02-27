@@ -231,13 +231,15 @@ def test_levels_bfs(difficulty, play_length, max_tests, id_store):
 
 def test_levels_a_star(difficulty, play_length, max_tests, id_store, model_path, order_kind='MIN'):
     def transform_value(val, kind):
-        # can be MIN, MAX, ABS
+        # can be MIN, MAX, ABS, ABS_MAX
         if kind == 'MIN':
             return val
         elif kind == 'MAX':
             return val * -1
         elif kind == 'ABS':
             return abs(val)
+        elif kind == 'ABS_MAX':
+            return abs(val) * -1
         else:
             raise TypeError
 

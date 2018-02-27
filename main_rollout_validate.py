@@ -24,6 +24,7 @@ pred_agent_indices = []
 mse_per_step = np.zeros(rollout_length, dtype=float)
 errors = np.zeros((rollout_length, 1000), dtype=int)
 agent_errors = np.zeros((rollout_length, 1000), dtype=int)
+agents_in_y = np.zeros((rollout_length, 1000), dtype=int)
 mse = []
 
 tf.reset_default_graph()
@@ -57,12 +58,20 @@ with tf.Session() as sess:
 
             # Validate agent position: count and index
             for entry in range(400):
-                if y_state[index, entry] == NewMatrixIndex.AgentAtGoalA or y_state[index, entry] == NewMatrixIndex.Agent:
-                    # Test if the agent is at the same field in y_state
-                    if exp_state[index, entry] == NewMatrixIndex.AgentAtGoalA or exp_state[index, entry] == NewMatrixIndex.Agent:
-                        pred_agent_indices[-1].append(index)
-                    else:
-                        agent_errors[rollout, index] += 1
+                y_agent = y_state[index, entry] == NewMatrixIndex.AgentAtGoalA or y_state[index, entry] == NewMatrixIndex.Agent
+                exp_agent = exp_state[index, entry] == NewMatrixIndex.AgentAtGoalA or exp_state[index, entry] == NewMatrixIndex.Agent
+
+                if y_agent and exp_agent:
+                    # correct
+                    pred_agent_indices[-1].append(index)
+                else:
+                    # Wrong
+                    agent_errors[rollout, index] += 1
+                    
+                if y_agent:
+                    # Total count of agents in prediction
+                    agents_in_y[rollout, index] += 1
+
 
     # Completed validation
     # Output agent predictions
@@ -78,8 +87,9 @@ with tf.Session() as sess:
         print(sorted(pred_agent_indices[rollout]))
 
     print('Saving mse and agent error data data.. and mean errors per rollout')
-    # save_object(mse, '{}/mse_data.pkl'.format(data_path))
-    # save_object(agent_errors, '{}/agent_error_data.pkl'.format(data_path))
+    save_object(mse, '{}/mse_data.pkl'.format(data_path))
+    save_object(agent_errors, '{}/agent_error_data.pkl'.format(data_path))
+    save_object(agents_in_y, '{}/agents_in_y_data.pkl'.format(data_path))
     save_object(np.mean(errors, dtype=float, axis=1), '{}/mean_error_data.pkl'.format(data_path))
 
 
