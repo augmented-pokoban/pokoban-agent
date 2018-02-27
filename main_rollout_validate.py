@@ -86,8 +86,8 @@ with tf.Session() as sess:
         print(sorted(pred_agent_indices[rollout]))
 
     print('Saving mse and agent error data data.. and mean errors per rollout')
-    save_object(mse, '{}/mse_data.pkl'.format(data_path))
-    save_object(agent_errors, '{}/agent_error_data.pkl'.format(data_path))
+    # save_object(mse, '{}/mse_data.pkl'.format(data_path))
+    # save_object(agent_errors, '{}/agent_error_data.pkl'.format(data_path))
     save_object(agents_in_y, '{}/agents_in_y_data.pkl'.format(data_path))
     save_object(np.mean(errors, dtype=float, axis=1), '{}/mean_error_data.pkl'.format(data_path))
 
