@@ -61,17 +61,16 @@ with tf.Session() as sess:
                 y_agent = y_state[index, entry] == NewMatrixIndex.AgentAtGoalA or y_state[index, entry] == NewMatrixIndex.Agent
                 exp_agent = exp_state[index, entry] == NewMatrixIndex.AgentAtGoalA or exp_state[index, entry] == NewMatrixIndex.Agent
 
-                if y_agent and exp_agent:
-                    # correct
-                    pred_agent_indices[-1].append(index)
-                else:
-                    # Wrong
-                    agent_errors[rollout, index] += 1
-                    
                 if y_agent:
                     # Total count of agents in prediction
                     agents_in_y[rollout, index] += 1
 
+                    if exp_agent:
+                        # correct
+                        pred_agent_indices[-1].append(index)
+                    else:
+                        # Wrong
+                        agent_errors[rollout, index] += 1
 
     # Completed validation
     # Output agent predictions
