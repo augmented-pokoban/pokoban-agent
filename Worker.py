@@ -91,110 +91,115 @@ class Worker:
 
             # This is the beginning of an episode
             while not coord.should_stop() and self.env.has_more_data():
-                sess.run(self.update_local_ops)
-                episode_buffer = []
-                episode_values = []
-                episode_reward = 0
-                episode_step_count = 0
-                done = False
+                try:
 
-                s = self.env.reset()
-                total_levels += 1
-                s = process_frame(s, self.s_size)
+                    sess.run(self.update_local_ops)
+                    episode_buffer = []
+                    episode_values = []
+                    episode_reward = 0
+                    episode_step_count = 0
+                    done = False
 
-                rnn_state = self.local_AC.state_init
-                self.batch_rnn_state = rnn_state
+                    s = self.env.reset()
+                    total_levels += 1
+                    s = process_frame(s, self.s_size)
 
-                while not done and episode_step_count < max_episode_length:
+                    rnn_state = self.local_AC.state_init
+                    self.batch_rnn_state = rnn_state
 
-                    if self.explore_self:
-                        a, v, rnn_state = self.eval_fn(sess, s, rnn_state)
-                    else:
-                        _, v, rnn_state = self.eval_fn(sess, s, rnn_state)
-                        a = self.env.get_expert_action()
+                    while not done and episode_step_count < max_episode_length:
 
-                    # Create step
-                    try:
-                        s1, r, done, _ = self.env.step(a)
-                    except Exception as e:
-                        self.env._store = True
-                        self.env.terminate('episode count: ' + str(episode_count))
-                        print(e)
-                        sys.exit()
+                        if self.explore_self:
+                            a, v, rnn_state = self.eval_fn(sess, s, rnn_state)
+                        else:
+                            _, v, rnn_state = self.eval_fn(sess, s, rnn_state)
+                            a = self.env.get_expert_action()
 
-                    if done:
-                        print('Episode: {} Steps: {} Worker: {} Reward: {} : COMPLETED'.format(episode_count,
-                                                                                               episode_step_count,
-                                                                                               self.name,
-                                                                                               r))
+                        # Create step
+                        try:
+                            s1, r, done, _ = self.env.step(a)
+                        except Exception as e:
+                            self.env._store = True
+                            self.env.terminate('episode count: ' + str(episode_count))
+                            print(e)
+                            sys.exit()
 
-                    # Update values, states, total amount of steps, etc
-                    episode_buffer.append([s, a, r, s1, done, v])
-                    episode_values.append(v)
+                        if done:
+                            print('Episode: {} Steps: {} Worker: {} Reward: {} : COMPLETED'.format(episode_count,
+                                                                                                   episode_step_count,
+                                                                                                   self.name,
+                                                                                                   r))
 
-                    episode_reward += r
-                    s = process_frame(s1, self.s_size)
-                    total_steps += 1
-                    episode_step_count += 1
+                        # Update values, states, total amount of steps, etc
+                        episode_buffer.append([s, a, r, s1, done, v])
+                        episode_values.append(v)
 
-                    # If the episode hasn't ended, but the experience buffer is full, then we
-                    # make an update step using that experience rollout.
-                    if len(episode_buffer) == max_buffer_length and not done \
-                            and episode_step_count != max_episode_length - 1:
-                        # Since we don't know what the true final return is, we "bootstrap" from our current
-                        # value estimation.
-                        v1 = self.value_fn(sess, s, rnn_state)
-                        # Train here
-                        p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, v1)
-                        episode_buffer = []
-                        sess.run(self.update_local_ops)
+                        episode_reward += r
+                        s = process_frame(s1, self.s_size)
+                        total_steps += 1
+                        episode_step_count += 1
 
-                self.episode_rewards.append(episode_reward)
-                self.episode_lengths.append(episode_step_count)
-                self.episode_mean_values.append(np.mean(episode_values))
+                        # If the episode hasn't ended, but the experience buffer is full, then we
+                        # make an update step using that experience rollout.
+                        if len(episode_buffer) == max_buffer_length and not done \
+                                and episode_step_count != max_episode_length - 1:
+                            # Since we don't know what the true final return is, we "bootstrap" from our current
+                            # value estimation.
+                            v1 = self.value_fn(sess, s, rnn_state)
+                            # Train here
+                            p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, v1)
+                            episode_buffer = []
+                            sess.run(self.update_local_ops)
 
-                # Update the network using the episode buffer at the end of the episode.
-                if len(episode_buffer) != 0:
-                    p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
+                    self.episode_rewards.append(episode_reward)
+                    self.episode_lengths.append(episode_step_count)
+                    self.episode_mean_values.append(np.mean(episode_values))
 
-                # Periodically save model parameters, and summary statistics.
-                if episode_count % 5 == 0 and episode_count != 0:
+                    # Update the network using the episode buffer at the end of the episode.
+                    if len(episode_buffer) != 0:
+                        p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
+
+                    # Periodically save model parameters, and summary statistics.
+                    if episode_count % 5 == 0 and episode_count != 0:
+                        if self.name == 'worker_0':
+                            print('Episode:', episode_count, 'steps: ', episode_step_count)
+
+                        mean_reward = np.mean(self.episode_rewards[-5:])
+                        mean_length = np.mean(self.episode_lengths[-5:])
+                        mean_value = np.mean(self.episode_mean_values[-5:])
+                        stats.append(
+                            StatsObject(episode_count, mean_reward, mean_length, mean_value, p_l, e_l, g_n, v_n, total_levels))
+
+                    if episode_count % 100 == 0 and self.name == 'worker_0' and episode_count != 0:
+                        print('Saving model')
+                        self.save(saver, sess, episode_count)
+                        print('Saved model')
+                        self.play(sess, episode_count)
+
+                    # Periodically save model parameters, and summary statistics.
+                    if episode_count % 100 == 0 and episode_count != 0:
+                        for stat in stats:
+                            summary = tf.Summary()
+                            summary.value.add(tag='Perf/Reward', simple_value=float(stat.mean_reward))
+                            summary.value.add(tag='Perf/Length', simple_value=float(stat.mean_length))
+                            summary.value.add(tag='Perf/Value', simple_value=float(stat.mean_value))
+                            summary.value.add(tag='Losses/Policy Loss', simple_value=float(stat.p_l))
+                            summary.value.add(tag='Losses/Entropy', simple_value=float(stat.e_l))
+                            summary.value.add(tag='Losses/Grad Norm', simple_value=float(stat.g_n))
+                            summary.value.add(tag='Losses/Var Norm', simple_value=float(stat.v_n))
+                            summary.value.add(tag='Levels', simple_value=float(stat.total_levels))
+                            self.summary_writer.add_summary(summary, stat.episode)
+                            self.summary_writer.flush()
+                            stats = []
+
                     if self.name == 'worker_0':
-                        print('Episode:', episode_count, 'steps: ', episode_step_count)
+                        sess.run(self.increment)
 
-                    mean_reward = np.mean(self.episode_rewards[-5:])
-                    mean_length = np.mean(self.episode_lengths[-5:])
-                    mean_value = np.mean(self.episode_mean_values[-5:])
-                    stats.append(
-                        StatsObject(episode_count, mean_reward, mean_length, mean_value, p_l, e_l, g_n, v_n, total_levels))
-
-                if episode_count % 100 == 0 and self.name == 'worker_0' and episode_count != 0:
-                    print('Saving model')
-                    self.save(saver, sess, episode_count)
-                    print('Saved model')
-                    self.play(sess, episode_count)
-
-                # Periodically save model parameters, and summary statistics.
-                if episode_count % 100 == 0 and episode_count != 0:
-                    for stat in stats:
-                        summary = tf.Summary()
-                        summary.value.add(tag='Perf/Reward', simple_value=float(stat.mean_reward))
-                        summary.value.add(tag='Perf/Length', simple_value=float(stat.mean_length))
-                        summary.value.add(tag='Perf/Value', simple_value=float(stat.mean_value))
-                        summary.value.add(tag='Losses/Policy Loss', simple_value=float(stat.p_l))
-                        summary.value.add(tag='Losses/Entropy', simple_value=float(stat.e_l))
-                        summary.value.add(tag='Losses/Grad Norm', simple_value=float(stat.g_n))
-                        summary.value.add(tag='Losses/Var Norm', simple_value=float(stat.v_n))
-                        summary.value.add(tag='Levels', simple_value=float(stat.total_levels))
-                        self.summary_writer.add_summary(summary, stat.episode)
-                        self.summary_writer.flush()
-                        stats = []
-
-                if self.name == 'worker_0':
-                    sess.run(self.increment)
-
-                episode_count += 1
-                sys.stdout.flush()
+                    episode_count += 1
+                    sys.stdout.flush()
+                except Exception as e:
+                    print('Worker {} failed, continue work work!'.format(self.name))
+                    print(e, file=sys.stderr)
 
             print(self.name, 'completed training in episode', str(episode_count))
             sys.stdout.flush()

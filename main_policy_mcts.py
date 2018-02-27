@@ -7,10 +7,11 @@ import tensorflow as tf
 
 from Network_mcts import Network
 from Worker_mcts import Worker
+from env import api
 from env.Env import Env
 from support.integrated_server import start_server
 
-max_episode_length = 100
+max_episode_length = 50
 max_buffer_length = 30
 gamma = .99  # discount rate for advantage estimation and reward discounting
 height = 20
@@ -27,6 +28,10 @@ last_id_path = './last_ids'
 num_workers = 20 # Set workers ot number of available CPU threads
 use_integrated_server = True
 name_of_agent = 'MCTS_'
+map_difficulty = 'simple'
+
+# Set api difficulty
+api.map_difficulty = map_difficulty
 
 # Used in saved replays
 Worker.game_type = name_of_agent
@@ -36,6 +41,10 @@ tf.reset_default_graph()
 
 if use_mcts:
     unsupervised = True
+
+# make replay storage folder
+if not os.path.exists('./trees'):
+    os.makedirs('./trees')
 
 if not os.path.exists(model_path):
     os.makedirs(model_path)

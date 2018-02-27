@@ -79,8 +79,9 @@ class Worker:
         episode_count = sess.run(self.global_episodes)
         total_steps = 0
         total_levels = 0
-        print("Starting worker " + str(self.number))
         stats = []
+        print("Starting worker " + str(self.number))
+
         with sess.as_default(), sess.graph.as_default():
 
             # This is the beginning of an episode
@@ -181,7 +182,15 @@ class Worker:
                     print('Saved model')
                     store_mcts = episode_count % 100 == 0
                     self.save(saver, sess, episode_count)
-                    self.play(sess, episode_count, store_mcts=store_mcts)
+
+                    play_success = False
+
+                    while not play_success:
+                        try:
+                            play_success = self.play(sess, episode_count, store_mcts=store_mcts)
+                        except Exception as e:
+                            print('Failed play level')
+                            print(e)
 
                 if episode_count % 100 == 0 and episode_count != 0:
 
@@ -224,16 +233,17 @@ class Worker:
         mcts = MCTS(s, 0, NetworkWrapper(sess, rnn_state, self.eval_fn), self.s_size, store_mcts,
                     worker_name=self.name)
 
-        while not done and t < 100:
+        while not done and t < 50:
             a_mcts, a = mcts.search(self.searches, episode_count, t)
-            _, v, rnn_state = self.eval_fn(sess, s, rnn_state)
+            # _, v, rnn_state = self.eval_fn(sess, s, rnn_state)
 
             s, r, done, _ = play_env.step(a)
-            s = process_frame(s, self.s_size)
+            # s = process_frame(s, self.s_size)
             t += 1
 
         play_env.terminate('{}: episode count: {}'.format(Worker.game_type, episode_count))
         print('Test trial terminated')
+        return True
 
     def save(self, saver, sess, episode_count):
         saver.save(sess, self.model_path + '/model-' + str(episode_count) + '.cptk')

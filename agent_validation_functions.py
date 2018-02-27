@@ -9,6 +9,7 @@ from helper import process_frame
 import numpy as np
 import tensorflow as tf
 import resource
+from queue import PriorityQueue
 
 from mcts.mcts import MCTS
 from mcts.network_wrapper import NetworkWrapper
@@ -29,7 +30,7 @@ action_success = 1
 def test_levels(difficulty, play_length, model_path, max_tests, id_store):
     api.map_difficulty = difficulty
     tf.reset_default_graph()
-    local_network = Network(height, width, depth, s_size, a_size, 'global', None)
+    local_network = Network(height, width, depth, s_size, a_size, 'global', None, 0.0)
     saver = tf.train.Saver(max_to_keep=5)
     print('Network initialized for {}'.format(difficulty))
 
@@ -108,7 +109,7 @@ def completion_factor(state):
 def test_levels_mcts(difficulty, play_length, model_path, max_tests, id_store, budget):
     api.map_difficulty = difficulty
     tf.reset_default_graph()
-    local_network = Network(height, width, depth, s_size, a_size, 'global', None)
+    local_network = Network(height, width, depth, s_size, a_size, 'global', None, 0.0)
     saver = tf.train.Saver(max_to_keep=5)
     print('Network initialized for {}'.format(difficulty))
 
@@ -145,10 +146,12 @@ def test_levels_mcts(difficulty, play_length, model_path, max_tests, id_store, b
                     s = process_frame(s, s_size)
                     t += 1
 
-                print('Episode completed: {}, memory used (kB): {}'.format(episode, resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
+                print('Episode completed: {}, memory used (kB): {}'.format(episode, resource.getrusage(
+                    resource.RUSAGE_SELF).ru_maxrss))
             except:
                 steps.append(play_length)
-                print('Failed evaluation: root equal to prev state: {}'.format(np.array_equal(process_frame(s, s_size), mcts.root.state)))
+                print('Failed evaluation: root equal to prev state: {}'.format(
+                    np.array_equal(process_frame(s, s_size), mcts.root.state)))
                 print('Environment done: {}, mcts root done: {}'.format(done, mcts.root.done))
                 raise
 
@@ -226,11 +229,103 @@ def test_levels_bfs(difficulty, play_length, max_tests, id_store):
     return completed_count, completed_steps, steps, frontier_lengths, exploration_lengths
 
 
+def test_levels_a_star(difficulty, play_length, max_tests, id_store, model_path, order_kind='MIN'):
+    def transform_value(val, kind):
+        # can be MIN, MAX, ABS
+        if kind == 'MIN':
+            return val
+        elif kind == 'MAX':
+            return val * -1
+        elif kind == 'ABS':
+            return abs(val)
+        else:
+            raise TypeError
+
+    api.map_difficulty = difficulty
+    test_env = Env(id_store=id_store)
+
+    tf.reset_default_graph()
+    local_network = Network(height, width, depth, s_size, a_size, 'global', None, 0.0)
+    saver = tf.train.Saver(max_to_keep=5)
+
+    # Data collection
+    completed_count = 0
+    steps = []
+    completed_steps = []
+    frontier_lengths = []
+    exploration_lengths = []
+
+    with tf.Session() as sess:
+        if model_path is None:
+            sess.run(tf.global_variables_initializer())
+        else:
+            print('Loading Model for {}...'.format(difficulty))
+            ckpt = tf.train.get_checkpoint_state(model_path)
+            saver.restore(sess, ckpt.model_checkpoint_path)
+
+        for episode in range(max_tests):
+
+            if episode % 50 == 0:
+                print('Episode: {} for difficulty: {}'.format(episode, difficulty))
+
+            frontier = PriorityQueue()
+            frontier_set = set()
+            explored = set()
+
+            s = test_env.reset()
+            done = False
+            last_node = None
+
+            a, v, rnn_state = local_network.eval_fn(sess, process_frame(s, s_size), local_network.state_init)
+
+            root = BfsNode(s, 0, rnn_state, value=v)
+            frontier.put(root)
+            frontier_set.add(root.get_hash())
+
+            while not done and not frontier.empty():
+                node = frontier.get()
+                frontier_set.remove(node.get_hash())
+
+                explored.add(node.get_hash())
+
+                for a in actions:
+                    s, success, done = apply_action(node.state, a, Env.get_action_meanings(), reshape=False)
+                    next_node = BfsNode(s, node.depth + 1)
+
+                    if done:
+                        # What to do when done?
+                        last_node = next_node
+                        break
+
+                    if success and next_node.get_hash() not in explored and next_node.get_hash() not in frontier_set and next_node.depth < play_length:
+
+                        a, v, rnn_state = local_network.eval_fn(sess, process_frame(next_node.state, s_size),
+                                                                node.rnn_state)
+
+                        next_node.rnn_state = rnn_state
+                        next_node.value = transform_value(v, order_kind)
+                        frontier.put(next_node)
+                        frontier_set.add(next_node.get_hash())
+
+            t = play_length
+
+            if done:
+                t = last_node.depth
+                completed_count += 1
+                completed_steps.append(t)
+
+            steps.append(t)
+            frontier_lengths.append(frontier.qsize())
+            exploration_lengths.append(len(explored))
+
+        return completed_count, completed_steps, steps, frontier_lengths, exploration_lengths
+
+
 def predict_supervised(data_path, model_path, use_mcts=False, mcts_budget=0):
     data = np.asarray(load_object(data_path))
 
     tf.reset_default_graph()
-    local_network = Network(height, width, depth, s_size, a_size, 'global', None)
+    local_network = Network(height, width, depth, s_size, a_size, 'global', None, 0.0)
     saver = tf.train.Saver(max_to_keep=5)
 
     # data collection
@@ -292,7 +387,7 @@ def predict_terminal(data_path, model_path, use_mcts=False, mcts_budget=0):
     data = np.asarray(load_object(data_path))
 
     tf.reset_default_graph()
-    local_network = Network(height, width, depth, s_size, a_size, 'global', None)
+    local_network = Network(height, width, depth, s_size, a_size, 'global', None, 0.0)
     saver = tf.train.Saver(max_to_keep=5)
 
     # data collection

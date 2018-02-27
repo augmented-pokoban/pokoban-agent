@@ -21,16 +21,18 @@ terminal_data_path = '../data_terminal/goal.pkl.zip'
 id_store_supereasy_id = '04b416ab02717de528d83b9f27186e37'
 id_store_supervised_id = '3c5e18630c13c4c4e45ac5abbddf84a4'
 
-use_mcts = True
+use_mcts = False
 use_bfs = False
-use_random_weights = True
+use_random_weights = False
+use_a_star = True
+a_star_kind = 'MIN'  # Can be MIN, MAX, or ABS
 
 if use_random_weights:
     model_path = None
 
-run_permutations = True
-run_supereasy = True
-run_simple = True
+run_permutations = False
+run_supereasy = False
+run_simple = False
 run_normal = True
 run_supervised_pred = False
 run_terminal_pred = False
@@ -47,7 +49,7 @@ def run_playouts(difficulty, id_store_init):
     store = IdStore(name=difficulty)
     store.write_id(id_store_init)
     compl_factors = [0]
-    actions = np.zeros((8,2))
+    actions = np.zeros((8, 2))
 
     if use_mcts:
         count, completed_steps, steps = agent_validation_functions.test_levels_mcts(difficulty,
@@ -67,6 +69,17 @@ def run_playouts(difficulty, id_store_init):
                                                                                 np.mean(explored_lengths)))
         suc_count = 'N/A'
         fail_count = 'N/A'
+
+    elif use_a_star:
+        count, completed_steps, steps, frontier_lengths, explored_lengths = agent_validation_functions \
+            .test_levels_a_star(difficulty, play_length=max_episode_length, max_tests=max_plays, id_store=store,
+                                model_path=model_path, order_kind=a_star_kind)
+
+        print('Frontier length average: {}, Explored length average: {}'.format(np.mean(frontier_lengths),
+                                                                                np.mean(explored_lengths)))
+        suc_count = 'N/A'
+        fail_count = 'N/A'
+
     else:
         count, completed_steps, steps, suc_count, fail_count, compl_factors, actions = agent_validation_functions.test_levels(
             difficulty,
@@ -126,4 +139,4 @@ if run_terminal_pred:
                                                                  mcts_budget=mcts_budget)
 
     acc = float(correct) / float(total) * 100.0
-    print('Total: {}, correct guesses: {}, acc: {} - for Predict Supervised'.format(total, correct, acc))
+    print('Total: {}, correct guesses: {}, acc: {} - for Predict Terminal'.format(total, correct, acc))

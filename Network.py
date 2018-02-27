@@ -8,6 +8,7 @@ from helper import normalized_columns_initializer
 class Network():
     def __init__(self, height, width, depth, s_size, a_size, scope, trainer, beta):
         with tf.variable_scope(scope):
+            self.actions = list(range(a_size))
             # Input and visual encoding layers
             self.inputs = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
 
@@ -83,3 +84,24 @@ class Network():
                 # Apply local gradients to global network
                 global_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global')
                 self.apply_grads = trainer.apply_gradients(zip(grads, global_vars))
+
+    def eval_fn(self, sess, state, rnn_state, deterministic=False):
+
+        a_dist, v, rnn_state = sess.run(
+            [self.policy, self.value, self.state_out],
+            feed_dict={self.inputs: [state],
+                       self.state_in[0]: rnn_state[0],
+                       self.state_in[1]: rnn_state[1]})
+
+        # Select the action using the prop distribution given in a_dist from previously
+        if np.isnan(a_dist[0]).any():
+            print(a_dist[0])
+
+        a, v = None, v[0, 0]
+
+        if deterministic:
+            a = np.argmax(a_dist)
+        else:
+            a = np.random.choice(self.actions, p=a_dist[0])
+
+        return a, v, rnn_state
