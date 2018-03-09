@@ -36,7 +36,7 @@ tf.reset_default_graph()
 network = Network(height, width, depth, s_size, a_size, 'global', None, 0.0)
 saver = tf.train.Saver(max_to_keep=5)
 
-values = np.zeros((1000, 21))
+values = np.zeros((1000, 20))
 
 with tf.Session() as sess:
     ckpt = tf.train.get_checkpoint_state(model_path)
@@ -70,12 +70,12 @@ with tf.Session() as sess:
 
             values[episode, step] = v
 
-        last_s = moves.transitions[-1].state
-
-        s = process_frame(new_state_to_matrix(last_s, 20), s_size)
-        a, v, rnn_state = network.eval_fn(sess, s, rnn_state)
-
-        values[episode, 20] = v
+        # last_s = moves.transitions[-1].state
+        #
+        # s = process_frame(new_state_to_matrix(last_s, 20), s_size)
+        # a, v, rnn_state = network.eval_fn(sess, s, rnn_state)
+        #
+        # values[episode, 20] = v
 
         # Calculate advantages
         # rewards_plus = np.asarray(rewards + [0.0])
@@ -97,7 +97,5 @@ with tf.Session() as sess:
 
         # save_object(data, 'adv_r_v.pkl')
 
-means = np.mean(values, axis=0)
-
-save_object(means, 'values_21_steps.pkl')
+save_object(values, 'values_20_steps_clean.pkl')
 
